@@ -144,6 +144,11 @@ export default async function AdminDashboardPage({
             Команда
           </Link>
         </div>
+        <p className="mt-4 text-sm text-muted">
+          После публикации контент сразу появляется на сайте. Инструкции:{" "}
+          <code className="rounded bg-surface-soft px-1">docs/ADMIN.md</code> в
+          репозитории.
+        </p>
       </section>
     </main>
   );

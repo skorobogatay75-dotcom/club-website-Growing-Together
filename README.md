@@ -29,6 +29,8 @@ npm run dev
 
 Откройте [http://localhost:3000](http://localhost:3000).
 
+**Production:** [docs/DEPLOY.md](./docs/DEPLOY.md) · **Админке:** [docs/ADMIN.md](./docs/ADMIN.md)
+
 ## База данных (этап 2)
 
 Миграции и seed лежат в `supabase/`. Подробности: [`supabase/README.md`](./supabase/README.md).
@@ -96,7 +98,15 @@ public/brand/         # логотип и бренд-ассеты
 7. CRUD и медиа — готово
 8. Галерея (полировка), настройки — готово
 9. SEO, a11y, performance, tests — готово
-10. Production deploy и инструкция администратора — следующий
+10. Production deploy и инструкция администратора — готово
+
+## Документация
+
+| Файл | Содержание |
+|------|------------|
+| [docs/DEPLOY.md](./docs/DEPLOY.md) | Vercel, env, Supabase, первый admin, чеклист |
+| [docs/ADMIN.md](./docs/ADMIN.md) | Работа сотрудников в админке |
+| [supabase/README.md](./supabase/README.md) | Миграции, RLS, Storage |
 
 ## Дизайн
 

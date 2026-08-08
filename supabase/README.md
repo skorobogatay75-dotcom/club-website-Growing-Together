@@ -49,6 +49,9 @@ values ('<AUTH_USER_UUID>', 'Администратор', 'admin', true);
 
 Страницы: `/admin/login`, `/admin/forgot-password`, `/admin/update-password`.
 
+Подробный production-чеклист: [`docs/DEPLOY.md`](../docs/DEPLOY.md).  
+Инструкция для сотрудников: [`docs/ADMIN.md`](../docs/ADMIN.md).
+
 ## RLS — кратко
 
 | Таблица | anon SELECT | anon INSERT | staff |
