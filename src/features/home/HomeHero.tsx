@@ -6,20 +6,21 @@ export function HomeHero() {
   return (
     <section className="relative isolate min-h-[calc(100dvh-4.25rem)] overflow-hidden">
       <Image
-        src="/brand/team-founders.png"
+        src="/brand/hero-family.png"
         alt=""
         fill
         priority
         sizes="100vw"
-        className="animate-hero-ken object-cover object-[center_18%] scale-105"
+        className="object-cover object-[72%_center] sm:object-[68%_center] lg:object-center"
+      />
+      {/* Читаемость текста слева, семья справа почти без вуали */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-[linear-gradient(105deg,rgb(255_243_234_/_92%)_0%,rgb(255_243_234_/_78%)_34%,rgb(255_243_234_/_28%)_58%,rgb(255_243_234_/_0%)_78%)]"
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_30%,rgb(255_243_234_/_94%)_0%,rgb(255_243_234_/_78%)_38%,rgb(242_216_201_/_35%)_62%,rgb(47_41_38_/_28%)_100%)]"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.35] mix-blend-multiply [background-image:radial-gradient(circle_at_1px_1px,rgb(168_86_69_/_18%)_1px,transparent_0)] [background-size:18px_18px]"
+        className="absolute inset-0 bg-[linear-gradient(to_top,rgb(47_41_38_/_12%)_0%,transparent_28%)]"
       />
 
       <div className="container-page relative flex min-h-[calc(100dvh-4.25rem)] items-center py-16 lg:py-20">
@@ -42,15 +43,6 @@ export function HomeHero() {
             <Link href="/#calendar" className="btn-secondary">
               Календарь событий
             </Link>
-          </div>
-
-          <div
-            aria-hidden="true"
-            className="mt-12 flex items-center gap-3 animate-fade-up [animation-delay:320ms]"
-          >
-            <span className="h-px w-10 bg-accent-warm/70" />
-            <span className="h-1.5 w-1.5 rounded-full bg-accent-secondary" />
-            <span className="h-px w-16 bg-accent/40" />
           </div>
         </div>
       </div>

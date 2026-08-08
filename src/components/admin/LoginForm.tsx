@@ -41,13 +41,29 @@ export function LoginForm({ nextPath = "/admin", errorCode }: Props) {
 
     try {
       const supabase = createSupabaseBrowserClient();
-      const { data, error } = await supabase.auth.signInWithPassword({
+
+      const loginPromise = supabase.auth.signInWithPassword({
         email,
         password,
       });
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        window.setTimeout(() => {
+          reject(
+            new Error(
+              "Превышено время ожидания ответа от Supabase (15 сек). Проверьте интернет или смените ключи на Legacy anon.",
+            ),
+          );
+        }, 15000);
+      });
+
+      const { data, error } = await Promise.race([loginPromise, timeoutPromise]);
 
       if (error || !data.user) {
-        setMessage("Неверный email или пароль.");
+        setMessage(
+          error?.message
+            ? `Не удалось войти: ${error.message}`
+            : "Неверный email или пароль.",
+        );
         setPending(false);
         return;
       }
