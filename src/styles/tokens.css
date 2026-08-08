@@ -1,0 +1,44 @@
+/**
+ * Фирменные токены «Вместе растём»
+ * Концепция: дом и объятие — светлый, спокойный, не «детсадовский» интерфейс.
+ */
+
+:root {
+  /* Brand palette */
+  --brand-terracotta: #a85645;
+  --brand-honey: #e6a64c;
+  --brand-turquoise: #80b4b2;
+  --brand-powder: #f2d8c9;
+  --brand-cream: #fff3ea;
+  --brand-ink: #2f2926;
+  --brand-muted: #746860;
+  --brand-border: #e7d8cc;
+
+  /* Semantic */
+  --background: var(--brand-cream);
+  --foreground: var(--brand-ink);
+  --muted: var(--brand-muted);
+  --surface: #fffaf6;
+  --surface-soft: var(--brand-powder);
+  --accent: var(--brand-terracotta);
+  --accent-hover: #934839;
+  --accent-secondary: var(--brand-turquoise);
+  --accent-warm: var(--brand-honey);
+  --border: var(--brand-border);
+  --ring: var(--brand-turquoise);
+
+  /* Focus & states */
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--brand-turquoise) 55%, white);
+
+  /* Radii (ТЗ: cards 18–24px, buttons 12–16px) */
+  --radius-card: 1.25rem;
+  --radius-button: 0.875rem;
+  --radius-input: 0.75rem;
+
+  /* Shadows — едва заметные */
+  --shadow-soft: 0 1px 2px rgb(47 41 38 / 4%), 0 8px 24px rgb(47 41 38 / 5%);
+
+  /* Typography scale */
+  --text-body: 1.0625rem;
+  --leading-body: 1.65;
+}
