@@ -1,6 +1,8 @@
 /**
- * Клиенты Supabase (browser / server / service role) — этап 3+.
- * Service role используется только в серверном коде и никогда не попадает в бандл браузера.
+ * Клиенты Supabase:
+ * - `server.ts` — Server Components / Route Handlers (anon + cookies, RLS)
+ * - `client.ts` — браузер (только NEXT_PUBLIC_*)
+ * - `admin.ts` — service role, только сервер
  *
- * Схема и RLS: см. `/supabase/migrations` и `/supabase/README.md`.
+ * Без env сайт собирается: запросы возвращают пустые списки.
  */

@@ -86,4 +86,19 @@
   .section-space {
     @apply py-14 sm:py-16 lg:py-20;
   }
+
+  .animate-fade-up {
+    animation: fade-up 0.7s ease-out both;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

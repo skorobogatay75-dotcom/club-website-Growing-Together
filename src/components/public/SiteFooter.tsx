@@ -1,9 +1,18 @@
 import Link from "next/link";
 import { SiteLogo } from "./SiteLogo";
 import { SITE_NAV } from "./nav";
+import {
+  hasAnyContact,
+  type PublicContacts,
+} from "@/features/home/queries";
 
-export function SiteFooter() {
+type Props = {
+  contacts: PublicContacts;
+};
+
+export function SiteFooter({ contacts }: Props) {
   const year = new Date().getFullYear();
+  const showContacts = hasAnyContact(contacts);
 
   return (
     <footer className="border-t border-border bg-surface-soft/60">
@@ -72,9 +81,37 @@ export function SiteFooter() {
               </Link>
             </li>
           </ul>
-          <p className="mt-6 text-sm text-muted">
-            Контактные данные появятся после заполнения настроек сайта.
-          </p>
+
+          {showContacts ? (
+            <address className="mt-6 space-y-1 text-sm not-italic text-muted">
+              {contacts.address ? <p>{contacts.address}</p> : null}
+              {contacts.hours ? <p>{contacts.hours}</p> : null}
+              {contacts.phone ? (
+                <p>
+                  <a
+                    href={`tel:${contacts.phone.replace(/[^\d+]/g, "")}`}
+                    className="hover:text-foreground"
+                  >
+                    {contacts.phone}
+                  </a>
+                </p>
+              ) : null}
+              {contacts.email ? (
+                <p>
+                  <a
+                    href={`mailto:${contacts.email}`}
+                    className="hover:text-foreground"
+                  >
+                    {contacts.email}
+                  </a>
+                </p>
+              ) : null}
+            </address>
+          ) : (
+            <p className="mt-6 text-sm text-muted">
+              Контактные данные появятся после заполнения настроек сайта.
+            </p>
+          )}
         </div>
       </div>
 
