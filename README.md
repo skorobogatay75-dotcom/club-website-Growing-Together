@@ -29,6 +29,20 @@ npm run dev
 
 Откройте [http://localhost:3000](http://localhost:3000).
 
+## База данных (этап 2)
+
+Миграции и seed лежат в `supabase/`. Подробности: [`supabase/README.md`](./supabase/README.md).
+
+```bash
+npx supabase db push
+npx supabase db query --file supabase/seed.sql
+# или локально: npx supabase db reset
+```
+
+Seed: 3 возрастные категории, 3 программы, 3 будущих + 1 прошедшее событие, черновик события (для проверки RLS), 3 новости, демо-альбом, категории документов, настройки без выдуманных контактов/цен.
+
+Buckets: `public-media` (JPEG/PNG/WebP до 10 МБ), `public-documents` (PDF/DOCX до 20 МБ).
+
 ## Скрипты
 
 | Команда | Назначение |
@@ -50,7 +64,9 @@ src/components/       # ui, public, admin, forms
 src/features/         # доменные модули
 src/lib/              # supabase, auth, validation, seo, email
 src/styles/           # дизайн-токены
-supabase/migrations/  # SQL + RLS
+src/types/            # TypeScript-типы схемы БД
+supabase/migrations/  # SQL + RLS + Storage
+supabase/seed.sql     # демо-данные
 public/brand/         # логотип и бренд-ассеты
 ```
 
@@ -64,9 +80,9 @@ public/brand/         # логотип и бренд-ассеты
 
 ## Этапы разработки
 
-1. Инициализация, токены, layout, README, `.env.example` ← текущий
-2. SQL, RLS, Storage policies, seed
-3. Публичный каркас и главная на данных БД
+1. Инициализация, токены, layout, README, `.env.example` — готово
+2. SQL, RLS, Storage policies, seed — готово
+3. Публичный каркас и главная на данных БД ← следующий
 4. Каталоги и детальные страницы
 5. Формы, уведомления, антиспам
 6. Auth, роли, admin layout

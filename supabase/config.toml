@@ -1,0 +1,15 @@
+# Project id заполняется после `supabase link`
+project_id = "vmeste-rastem"
+
+[api]
+enabled = true
+
+[db]
+major_version = 15
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[studio]
+enabled = true
