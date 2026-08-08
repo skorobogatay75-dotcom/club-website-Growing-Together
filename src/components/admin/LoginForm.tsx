@@ -1,29 +1,99 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
-import { loginAction, type AuthActionState } from "@/lib/auth/actions";
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Props = {
   nextPath?: string;
   errorCode?: string;
 };
 
-const initial: AuthActionState = null;
-
 export function LoginForm({ nextPath = "/admin", errorCode }: Props) {
-  const [state, action, pending] = useActionState(loginAction, initial);
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
   const bootstrapError =
     errorCode === "forbidden"
-      ? "Нет доступа к админ-панели для этой учётной записи."
+      ? "Нет доступа к админ-панели для этой учётной записи. Проверьте профиль admin в Supabase."
       : errorCode === "config"
         ? "Не настроены переменные Supabase."
         : null;
 
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage(null);
+    setPending(true);
+
+    const form = new FormData(event.currentTarget);
+    const email = String(form.get("email") ?? "")
+      .trim()
+      .toLowerCase();
+    const password = String(form.get("password") ?? "");
+
+    if (!email || !password) {
+      setMessage("Укажите email и пароль.");
+      setPending(false);
+      return;
+    }
+
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error || !data.user) {
+        setMessage("Неверный email или пароль.");
+        setPending(false);
+        return;
+      }
+
+      const sessionCheck = await fetch("/api/admin/session", {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+      const sessionJson = (await sessionCheck.json()) as {
+        ok?: boolean;
+        reason?: string;
+        message?: string;
+      };
+
+      if (!sessionJson.ok) {
+        await supabase.auth.signOut();
+        setMessage(
+          sessionJson.reason === "forbidden"
+            ? "Учётная запись есть, но нет роли admin/editor в таблице profiles."
+            : sessionJson.message ||
+                "Не удалось проверить доступ. Обновите страницу и попробуйте снова.",
+        );
+        setPending(false);
+        return;
+      }
+
+      const safeNext =
+        nextPath.startsWith("/admin") && !nextPath.startsWith("/admin/login")
+          ? nextPath
+          : "/admin";
+      router.replace(safeNext);
+      router.refresh();
+      return;
+    } catch (err) {
+      setMessage(
+        err instanceof Error
+          ? `Сбой входа: ${err.message}`
+          : "Сбой входа. Проверьте интернет и ключи Supabase.",
+      );
+      setPending(false);
+    }
+  }
+
   return (
-    <form action={action} className="space-y-4">
-      <input type="hidden" name="next" value={nextPath} />
+    <form onSubmit={onSubmit} className="space-y-4">
       <h1 className="text-2xl font-semibold tracking-tight text-foreground">
         Вход
       </h1>
@@ -32,12 +102,12 @@ export function LoginForm({ nextPath = "/admin", errorCode }: Props) {
         Supabase.
       </p>
 
-      {(bootstrapError || (state && !state.ok)) && (
+      {(bootstrapError || message) && (
         <p
           role="alert"
           className="rounded-[var(--radius-button)] bg-brand-powder/70 px-3 py-2 text-sm"
         >
-          {bootstrapError || state?.message}
+          {bootstrapError || message}
         </p>
       )}
 
@@ -49,6 +119,7 @@ export function LoginForm({ nextPath = "/admin", errorCode }: Props) {
           name="email"
           autoComplete="username"
           required
+          defaultValue="cmks0106@mail.ru"
         />
       </label>
       <label className="block text-sm">

@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 const PUBLIC_ADMIN_PREFIXES = [
@@ -12,6 +13,22 @@ function isPublicAdminPath(pathname: string): boolean {
   return PUBLIC_ADMIN_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
+}
+
+async function getStaffProfile(userId: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!url || !serviceKey) return null;
+
+  const admin = createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data } = await admin
+    .from("profiles")
+    .select("role, is_active")
+    .eq("id", userId)
+    .maybeSingle();
+  return data;
 }
 
 export async function middleware(request: NextRequest) {
@@ -28,7 +45,6 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!url || !anonKey) {
-    // Без env админка недоступна, кроме публичных auth-страниц
     if (!isPublicAdminPath(pathname)) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/admin/login";
@@ -62,7 +78,10 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (isPublicAdminPath(pathname)) {
-    if (user && (pathname === "/admin/login" || pathname === "/admin/forgot-password")) {
+    if (
+      user &&
+      (pathname === "/admin/login" || pathname === "/admin/forgot-password")
+    ) {
       const dest = request.nextUrl.clone();
       dest.pathname = "/admin";
       dest.search = "";
@@ -78,11 +97,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, is_active")
-    .eq("id", user.id)
-    .maybeSingle();
+  const profile =
+    (await getStaffProfile(user.id)) ??
+    (
+      await supabase
+        .from("profiles")
+        .select("role, is_active")
+        .eq("id", user.id)
+        .maybeSingle()
+    ).data;
 
   const isStaff =
     !!profile &&

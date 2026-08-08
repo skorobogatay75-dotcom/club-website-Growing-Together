@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServiceClient } from "@/lib/supabase/admin";
 
 export type AuthActionState =
   | { ok: true; message: string }
@@ -47,11 +48,25 @@ export async function loginAction(
     return { ok: false, message: "Неверный email или пароль." };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, is_active")
-    .eq("id", data.user.id)
-    .maybeSingle();
+  // После signIn cookies сессии могут ещё не участвовать в RLS —
+  // роль проверяем service role по уже подтверждённому user.id.
+  let profile: { role: string; is_active: boolean } | null = null;
+  try {
+    const admin = createSupabaseServiceClient();
+    const { data: row } = await admin
+      .from("profiles")
+      .select("role, is_active")
+      .eq("id", data.user.id)
+      .maybeSingle();
+    profile = row;
+  } catch {
+    const { data: row } = await supabase
+      .from("profiles")
+      .select("role, is_active")
+      .eq("id", data.user.id)
+      .maybeSingle();
+    profile = row;
+  }
 
   const allowed =
     !!profile &&
@@ -63,7 +78,7 @@ export async function loginAction(
     return {
       ok: false,
       message:
-        "У этой учётной записи нет доступа в админ-панель. Обратитесь к администратору.",
+        "У этой учётной записи нет профиля admin/editor. Выполните SQL из инструкции и попробуйте снова.",
     };
   }
 
