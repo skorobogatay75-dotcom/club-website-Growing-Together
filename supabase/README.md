@@ -42,6 +42,13 @@ insert into public.profiles (id, full_name, role, is_active)
 values ('<AUTH_USER_UUID>', 'Администратор', 'admin', true);
 ```
 
+В Redirect URLs Supabase добавьте:
+
+- `http://localhost:3000/admin/auth/callback`
+- `https://<ваш-домен>/admin/auth/callback`
+
+Страницы: `/admin/login`, `/admin/forgot-password`, `/admin/update-password`.
+
 ## RLS — кратко
 
 | Таблица | anon SELECT | anon INSERT | staff |

@@ -12,7 +12,7 @@ export function createAdminMetadata(title: string): Metadata {
 
 export function AdminSectionStub({ title, description }: AdminStubProps) {
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <div>
       <p className="text-sm text-muted">
         <Link href="/admin" className="hover:text-foreground">
           ← К обзору
@@ -22,6 +22,9 @@ export function AdminSectionStub({ title, description }: AdminStubProps) {
         {title}
       </h1>
       <p className="mt-3 max-w-2xl text-sm text-muted">{description}</p>
-    </main>
+      <p className="mt-6 text-sm text-muted">
+        Раздел защищён входом. Полный CRUD появится на следующем этапе.
+      </p>
+    </div>
   );
 }
