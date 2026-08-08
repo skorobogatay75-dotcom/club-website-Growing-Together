@@ -13,7 +13,7 @@ export default async function PublicLayout({
   const contacts = await getPublicContacts();
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="surface-paper flex min-h-dvh flex-col">
       <SkipToContent />
       <JsonLd data={organizationJsonLd(contacts)} />
       <JsonLd data={websiteJsonLd()} />

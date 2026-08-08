@@ -9,7 +9,6 @@ import {
   getWeekdayLongLabels,
   getWeekdayShortLabels,
   shiftMonth,
-  toDateKey,
 } from "@/features/events/calendar-math";
 import type { CalendarEvent } from "@/features/events/queries";
 import type { MonthGrid } from "@/features/events/calendar-math";
@@ -26,6 +25,9 @@ type Props = {
   month: number;
   view: EventsViewMode;
   autoDetectView?: boolean;
+  /** Полная страница /events или встраивание на главную */
+  variant?: "page" | "embed";
+  showFilters?: boolean;
   filters: {
     age: string;
     audience: string;
@@ -54,6 +56,8 @@ export function EventsCalendar({
   month,
   view,
   autoDetectView = false,
+  variant = "page",
+  showFilters,
   filters,
   grid,
   eventsByDay,
@@ -69,6 +73,9 @@ export function EventsCalendar({
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const weekdayShort = getWeekdayShortLabels();
   const weekdayLong = getWeekdayLongLabels();
+  const isEmbed = variant === "embed";
+  const filtersVisible = showFilters ?? !isEmbed;
+  const HeadingTag = isEmbed ? "h2" : "h1";
 
   const navigate = useCallback(
     (next: {
@@ -85,9 +92,9 @@ export function EventsCalendar({
         year: String(y),
         month: String(m),
         view: next.view ?? view,
-        age: next.age ?? filters.age,
-        audience: next.audience ?? filters.audience,
-        format: next.format ?? filters.format,
+        age: (next.age ?? filters.age) || undefined,
+        audience: (next.audience ?? filters.audience) || undefined,
+        format: (next.format ?? filters.format) || undefined,
       });
       startTransition(() => {
         router.push(`${pathname}${query}`, { scroll: false });
@@ -123,13 +130,28 @@ export function EventsCalendar({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+          <HeadingTag
+            className={
+              isEmbed
+                ? "text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
+                : "text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
+            }
+          >
             Календарь событий
-          </h1>
+          </HeadingTag>
           <p className="mt-2 text-muted">
-            Месячная сетка встреч клуба. Можно скопировать ссылку на выбранный
-            месяц и фильтры.
+            {isEmbed
+              ? "Месячная сетка встреч клуба — переключайте месяц прямо здесь."
+              : "Месячная сетка встреч клуба. Можно скопировать ссылку на выбранный месяц и фильтры."}
           </p>
+          {isEmbed ? (
+            <Link
+              href="/events"
+              className="mt-3 inline-flex text-sm font-semibold text-accent transition-colors hover:text-accent-hover"
+            >
+              Открыть полный календарь
+            </Link>
+          ) : null}
         </div>
 
         <div
@@ -161,6 +183,7 @@ export function EventsCalendar({
         </div>
       </div>
 
+      {filtersVisible ? (
       <form
         className="grid gap-3 rounded-[var(--radius-card)] border border-border bg-surface p-4 sm:grid-cols-3"
         onSubmit={(event) => {
@@ -223,6 +246,7 @@ export function EventsCalendar({
           </button>
         </div>
       </form>
+      ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
@@ -453,25 +477,3 @@ export function resolveInitialView(
   }
   return preferAgenda ? "agenda" : "calendar";
 }
-
-export function parseYearMonth(
-  yearParam: string | undefined,
-  monthParam: string | undefined,
-  fallback: { year: number; month: number },
-) {
-  const year = Number(yearParam);
-  const month = Number(monthParam);
-  if (
-    Number.isInteger(year) &&
-    year >= 2000 &&
-    year <= 2100 &&
-    Number.isInteger(month) &&
-    month >= 1 &&
-    month <= 12
-  ) {
-    return { year, month };
-  }
-  return fallback;
-}
-
-export { toDateKey };

@@ -15,8 +15,12 @@ const STEPS = [
 
 export function HomeFormatSchema() {
   return (
-    <section className="section-space border-b border-border bg-[linear-gradient(180deg,color-mix(in_srgb,var(--brand-turquoise)_10%,transparent),transparent)]">
-      <div className="container-page">
+    <section className="section-space relative overflow-hidden border-b border-border">
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--brand-turquoise)_16%,transparent),transparent_55%),radial-gradient(ellipse_at_bottom_right,color-mix(in_srgb,var(--brand-honey)_12%,transparent),transparent_45%)]"
+      />
+      <div className="container-page relative">
         <h2 className="max-w-2xl text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           Одна тема — два формата — общий опыт
         </h2>
@@ -25,13 +29,13 @@ export function HomeFormatSchema() {
           каждому возрасту.
         </p>
 
-        <ol className="mt-10 grid gap-6 md:grid-cols-3">
+        <ol className="mt-10 grid gap-8 md:grid-cols-3 md:gap-6">
           {STEPS.map((step, index) => (
             <li key={step.title} className="relative">
-              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-accent-secondary">
+              <p className="font-semibold tabular-nums text-4xl leading-none text-accent-secondary/35">
                 {String(index + 1).padStart(2, "0")}
               </p>
-              <h3 className="mt-3 text-lg font-semibold text-foreground">
+              <h3 className="mt-4 text-lg font-semibold text-foreground">
                 {step.title}
               </h3>
               <p className="mt-2 text-sm text-muted">{step.text}</p>

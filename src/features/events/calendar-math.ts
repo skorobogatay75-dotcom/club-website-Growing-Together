@@ -113,6 +113,26 @@ export function formatMonthLabel(year: number, month: number): string {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
+export function parseYearMonth(
+  yearParam: string | undefined,
+  monthParam: string | undefined,
+  fallback: { year: number; month: number },
+) {
+  const year = Number(yearParam);
+  const month = Number(monthParam);
+  if (
+    Number.isInteger(year) &&
+    year >= 2000 &&
+    year <= 2100 &&
+    Number.isInteger(month) &&
+    month >= 1 &&
+    month <= 12
+  ) {
+    return { year, month };
+  }
+  return fallback;
+}
+
 /**
  * Строит сетку месяца: ровно 6 недель × 7 дней (42 ячейки),
  * дни соседних месяцев помечены inCurrentMonth=false.

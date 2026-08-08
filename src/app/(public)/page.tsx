@@ -3,11 +3,10 @@ import {
   getLatestNews,
   getPublishedMembershipPlans,
   getPublishedTeamMembers,
-  getUpcomingEvents,
 } from "@/features/home/queries";
 import { getLatestAlbumWithCover } from "@/features/gallery/queries";
 import { HomeApplyCta } from "@/features/home/HomeApplyCta";
-import { HomeEvents } from "@/features/home/HomeEvents";
+import { HomeCalendar } from "@/features/home/HomeCalendar";
 import { HomeFormatSchema } from "@/features/home/HomeFormatSchema";
 import { HomeGallery } from "@/features/home/HomeGallery";
 import { HomeHero } from "@/features/home/HomeHero";
@@ -18,10 +17,21 @@ import { HomeTrust } from "@/features/home/HomeTrust";
 
 export const revalidate = 60;
 
-export default async function HomePage() {
-  const [news, events, programs, team, plans, album] = await Promise.all([
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+function first(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const params = await searchParams;
+
+  const [news, programs, team, plans, album] = await Promise.all([
     getLatestNews(3),
-    getUpcomingEvents(4),
     getFeaturedPrograms(6),
     getPublishedTeamMembers(),
     getPublishedMembershipPlans(),
@@ -32,7 +42,11 @@ export default async function HomePage() {
     <>
       <HomeHero />
       <HomeNews posts={news} />
-      <HomeEvents events={events} />
+      <HomeCalendar
+        yearParam={first(params.year)}
+        monthParam={first(params.month)}
+        viewParam={first(params.view)}
+      />
       <HomeFormatSchema />
       <HomePrograms programs={programs} />
       <HomeTrust members={team} />

@@ -81,7 +81,7 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-md">
       <div className="container-page flex h-16 items-center justify-between gap-4 sm:h-[4.25rem]">
         <SiteLogo />
 

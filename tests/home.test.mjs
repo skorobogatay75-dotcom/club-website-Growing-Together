@@ -34,7 +34,8 @@ describe("stage 3 public content helpers", () => {
       "utf8",
     );
     assert.match(page, /getLatestNews/);
-    assert.match(page, /getUpcomingEvents/);
+    assert.match(page, /HomeCalendar/);
+    assert.match(page, /HomeNews/);
     assert.match(page, /getFeaturedPrograms/);
     assert.match(page, /HomeHero/);
   });

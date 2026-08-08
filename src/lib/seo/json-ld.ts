@@ -12,7 +12,7 @@ export function organizationJsonLd(contacts?: {
     url: getSiteUrl(),
     description:
       "Семейный клуб: игровые мастер-классы, квизы и развивающие встречи для родителей и детей.",
-    logo: absoluteUrl("/brand/team-founders.png"),
+    logo: absoluteUrl("/brand/logo.svg"),
   };
 
   if (contacts?.email) data.email = contacts.email;
@@ -106,7 +106,7 @@ export function articleJsonLd(input: {
       name: "Вместе растём",
       logo: {
         "@type": "ImageObject",
-        url: absoluteUrl("/brand/team-founders.png"),
+        url: absoluteUrl("/brand/logo.svg"),
       },
     },
   };
