@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublishedNewsBySlug } from "@/features/content/queries";
+import { getRelatedNews } from "@/features/news/queries";
+import { ContentBlocks } from "@/components/public/ContentBlocks";
+import { ShareButton } from "@/components/public/ShareButton";
 import { formatNewsDate } from "@/lib/format/datetime";
 import { isPublicText } from "@/lib/content/public-text";
 
@@ -24,6 +27,7 @@ export default async function NewsDetailPage({ params }: Props) {
   const post = await getPublishedNewsBySlug(slug);
   if (!post) notFound();
 
+  const related = await getRelatedNews(post);
   const dateLabel = formatNewsDate(post.published_at);
   const excerpt = isPublicText(post.excerpt) ? post.excerpt : null;
 
@@ -47,10 +51,32 @@ export default async function NewsDetailPage({ params }: Props) {
           {post.title}
         </h1>
         {excerpt ? <p className="mt-5 text-lg text-muted">{excerpt}</p> : null}
-        <p className="mt-10 text-sm text-muted">
-          Полный текст с безопасной отрисовкой rich text появится на следующем
-          этапе каталогов.
-        </p>
+        <div className="mt-8">
+          <ContentBlocks value={post.content_json} />
+        </div>
+        <div className="mt-8">
+          <ShareButton title={post.title} />
+        </div>
+
+        {related.length > 0 ? (
+          <section className="mt-12">
+            <h2 className="text-xl font-semibold text-foreground">
+              Ещё новости
+            </h2>
+            <ul className="mt-4 space-y-2">
+              {related.map((item) => (
+                <li key={item.id}>
+                  <Link
+                    href={`/news/${item.slug}`}
+                    className="text-accent hover:text-accent-hover"
+                  >
+                    {item.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </div>
     </article>
   );

@@ -19,6 +19,7 @@ describe("stage 2 sql migrations", () => {
       "20260808120003_functions_and_triggers.sql",
       "20260808120004_rls.sql",
       "20260808120005_storage.sql",
+      "20260808130001_event_remaining_seats.sql",
     ]);
   });
 

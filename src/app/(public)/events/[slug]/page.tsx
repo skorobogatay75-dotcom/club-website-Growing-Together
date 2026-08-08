@@ -2,12 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublishedEventBySlug } from "@/features/content/queries";
-import { formatEventDateTime } from "@/lib/format/datetime";
+import { getEventRemainingSeats } from "@/features/events/queries";
+import { ContentBlocks } from "@/components/public/ContentBlocks";
 import {
+  formatEventDateTime,
+} from "@/lib/format/datetime";
+import {
+  audienceLabel,
   formatLabel,
   registrationLabel,
 } from "@/lib/format/labels";
 import { isPublicText, publicTextOrNull } from "@/lib/content/public-text";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { AgeCategory } from "@/types/database";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -28,6 +35,11 @@ export default async function EventDetailPage({ params }: Props) {
   const event = await getPublishedEventBySlug(slug);
   if (!event) notFound();
 
+  const [remainingSeats, ageCategory] = await Promise.all([
+    event.capacity != null ? getEventRemainingSeats(event.id) : Promise.resolve(null),
+    getAgeCategoryName(event.age_category_id),
+  ]);
+
   const excerpt = isPublicText(event.excerpt) ? event.excerpt : null;
   const venue = publicTextOrNull(event.venue);
   const price = publicTextOrNull(event.price_text);
@@ -44,22 +56,78 @@ export default async function EventDetailPage({ params }: Props) {
           <time dateTime={event.starts_at}>
             {formatEventDateTime(event.starts_at)}
           </time>
-          {" · "}
-          {formatLabel(event.format)}
+          {" — "}
+          <time dateTime={event.ends_at}>{formatEventDateTime(event.ends_at)}</time>
         </p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           {event.title}
         </h1>
-        <p className="mt-4 text-sm font-medium text-foreground">
-          {registrationLabel(event.registration_status)}
-        </p>
-        {excerpt ? <p className="mt-5 text-lg text-muted">{excerpt}</p> : null}
-        {venue ? <p className="mt-4 text-sm text-muted">Место: {venue}</p> : null}
-        {price ? <p className="mt-2 text-sm text-muted">{price}</p> : null}
-        <Link href="/apply" className="btn-primary mt-8 inline-flex">
-          Записаться
-        </Link>
+
+        <ul className="mt-5 flex flex-wrap gap-2 text-sm">
+          <li className="rounded-md bg-surface px-2 py-1">
+            {formatLabel(event.format)}
+          </li>
+          <li className="rounded-md bg-surface px-2 py-1">
+            {audienceLabel(event.audience_type)}
+          </li>
+          {ageCategory ? (
+            <li className="rounded-md bg-surface px-2 py-1">{ageCategory}</li>
+          ) : null}
+          <li className="rounded-md bg-surface px-2 py-1">
+            {registrationLabel(event.registration_status)}
+          </li>
+        </ul>
+
+        {excerpt ? <p className="mt-6 text-lg text-muted">{excerpt}</p> : null}
+        <div className="mt-6">
+          <ContentBlocks value={event.content_json} />
+        </div>
+
+        <dl className="mt-8 space-y-2 text-sm text-muted">
+          {venue ? (
+            <div>
+              <dt className="inline font-medium text-foreground">Место: </dt>
+              <dd className="inline">{venue}</dd>
+            </div>
+          ) : null}
+          {price ? (
+            <div>
+              <dt className="inline font-medium text-foreground">Стоимость: </dt>
+              <dd className="inline">{price}</dd>
+            </div>
+          ) : null}
+          {event.capacity != null && remainingSeats != null ? (
+            <div>
+              <dt className="inline font-medium text-foreground">Осталось мест: </dt>
+              <dd className="inline">{remainingSeats}</dd>
+            </div>
+          ) : null}
+        </dl>
+
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link
+            href={`/apply?type=event&event=${event.slug}`}
+            className="btn-primary"
+          >
+            Записаться
+          </Link>
+          <a href={`/api/events/${event.slug}/ics`} className="btn-secondary">
+            Скачать .ics
+          </a>
+        </div>
       </div>
     </article>
   );
+}
+
+async function getAgeCategoryName(id: string | null): Promise<string | null> {
+  if (!id) return null;
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return null;
+  const { data } = await supabase
+    .from("age_categories")
+    .select("name")
+    .eq("id", id)
+    .maybeSingle();
+  return (data as Pick<AgeCategory, "name"> | null)?.name ?? null;
 }

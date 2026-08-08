@@ -9,6 +9,7 @@
 3. `20260808120003_functions_and_triggers.sql` — `is_staff` / `is_admin`, `updated_at`, `published_at`
 4. `20260808120004_rls.sql` — Row Level Security
 5. `20260808120005_storage.sql` — buckets `public-media`, `public-documents`
+6. `20260808130001_event_remaining_seats.sql` — остаток мест для событий
 
 ## Как применить
 

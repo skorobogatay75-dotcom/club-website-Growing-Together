@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublishedAlbumBySlug } from "@/features/content/queries";
+import { getAlbumPhotos } from "@/features/gallery/queries";
+import { GalleryLightbox } from "@/features/gallery/GalleryLightbox";
 import { isPublicText } from "@/lib/content/public-text";
 
 type Props = {
@@ -23,11 +25,12 @@ export default async function GalleryDetailPage({ params }: Props) {
   const album = await getPublishedAlbumBySlug(slug);
   if (!album) notFound();
 
+  const photos = await getAlbumPhotos(album.id);
   const description = isPublicText(album.description) ? album.description : null;
 
   return (
     <article className="section-space">
-      <div className="container-page max-w-3xl">
+      <div className="container-page">
         <p className="text-sm text-muted">
           <Link href="/gallery" className="hover:text-foreground">
             ← Фоторепортажи
@@ -36,13 +39,13 @@ export default async function GalleryDetailPage({ params }: Props) {
         <h1 className="mt-6 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           {album.title}
         </h1>
-        {description ? (
-          <p className="mt-5 text-lg text-muted">{description}</p>
+        {album.event_date ? (
+          <p className="mt-3 text-sm text-muted">{album.event_date}</p>
         ) : null}
-        <p className="mt-8 text-sm text-muted">
-          Сетка фотографий и lightbox появятся после загрузки медиа в
-          админ-панели.
-        </p>
+        {description ? (
+          <p className="mt-5 max-w-3xl text-lg text-muted">{description}</p>
+        ) : null}
+        <GalleryLightbox photos={photos} />
       </div>
     </article>
   );
