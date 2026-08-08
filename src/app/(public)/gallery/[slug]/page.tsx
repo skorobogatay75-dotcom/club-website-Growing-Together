@@ -5,6 +5,9 @@ import { getPublishedAlbumBySlug } from "@/features/content/queries";
 import { getAlbumPhotos } from "@/features/gallery/queries";
 import { GalleryLightbox } from "@/features/gallery/GalleryLightbox";
 import { isPublicText } from "@/lib/content/public-text";
+import { buildPageMetadata } from "@/lib/seo/metadata";
+import { breadcrumbJsonLd } from "@/lib/seo/json-ld";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -13,11 +16,12 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const album = await getPublishedAlbumBySlug(slug);
-  if (!album) return { title: "Альбом не найден" };
-  return {
+  if (!album) return { title: "Альбом не найден", robots: { index: false } };
+  return buildPageMetadata({
     title: album.seo_title || album.title,
-    description: album.seo_description || album.description || undefined,
-  };
+    description: album.seo_description || album.description,
+    path: `/gallery/${album.slug}`,
+  });
 }
 
 export default async function GalleryDetailPage({ params }: Props) {
@@ -30,6 +34,13 @@ export default async function GalleryDetailPage({ params }: Props) {
 
   return (
     <article className="section-space">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Главная", path: "/" },
+          { name: "Фоторепортажи", path: "/gallery" },
+          { name: album.title, path: `/gallery/${album.slug}` },
+        ])}
+      />
       <div className="container-page">
         <p className="text-sm text-muted">
           <Link href="/gallery" className="hover:text-foreground">

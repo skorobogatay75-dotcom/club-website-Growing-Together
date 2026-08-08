@@ -78,6 +78,13 @@ public/brand/         # логотип и бренд-ассеты
 - `SUPABASE_SERVICE_ROLE_KEY` — **только сервер**, никогда в браузер и в git
 - Секреты не коммитить; `.env.local` в `.gitignore`
 
+## SEO и доступность
+
+- `sitemap.xml` и `robots.txt` (админка и `/api` закрыты от индексации)
+- Open Graph / Twitter metadata, canonical, JSON-LD (Organization, WebSite, Event, Article, BreadcrumbList)
+- Skip-link «Перейти к содержимому», `lang="ru"`, focus-visible, `prefers-reduced-motion`
+- Security headers: `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `X-Frame-Options`
+
 ## Этапы разработки
 
 1. Инициализация, токены, layout, README, `.env.example` — готово
@@ -88,8 +95,8 @@ public/brand/         # логотип и бренд-ассеты
 6. Auth, роли, admin layout — готово
 7. CRUD и медиа — готово
 8. Галерея (полировка), настройки — готово
-9. SEO, a11y, performance, tests — следующий
-10. Production deploy и инструкция администратора
+9. SEO, a11y, performance, tests — готово
+10. Production deploy и инструкция администратора — следующий
 
 ## Дизайн
 

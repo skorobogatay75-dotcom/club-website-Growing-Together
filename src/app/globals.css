@@ -71,6 +71,26 @@
 }
 
 @layer components {
+  .skip-to-content {
+    position: absolute;
+    left: 1rem;
+    top: 1rem;
+    z-index: 100;
+    transform: translateY(-200%);
+    border-radius: var(--radius-button);
+    background: var(--accent);
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+  }
+
+  .skip-to-content:focus {
+    transform: translateY(0);
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+
   .container-page {
     @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
   }

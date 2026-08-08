@@ -14,6 +14,9 @@ import {
 } from "@/lib/format/labels";
 import { formatEventDateTime } from "@/lib/format/datetime";
 import { isPublicText, publicTextOrNull } from "@/lib/content/public-text";
+import { buildPageMetadata } from "@/lib/seo/metadata";
+import { breadcrumbJsonLd } from "@/lib/seo/json-ld";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -22,11 +25,13 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const program = await getPublishedProgramBySlug(slug);
-  if (!program) return { title: "Программа не найдена" };
-  return {
+  if (!program) return { title: "Программа не найдена", robots: { index: false } };
+  return buildPageMetadata({
     title: program.seo_title || program.title,
-    description: program.seo_description || program.excerpt || undefined,
-  };
+    description: program.seo_description || program.excerpt,
+    path: `/programs/${program.slug}`,
+    imagePath: program.cover_path,
+  });
 }
 
 export default async function ProgramDetailPage({ params }: Props) {
@@ -45,6 +50,13 @@ export default async function ProgramDetailPage({ params }: Props) {
 
   return (
     <article className="section-space">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Главная", path: "/" },
+          { name: "Программы", path: "/programs" },
+          { name: program.title, path: `/programs/${program.slug}` },
+        ])}
+      />
       <div className="container-page max-w-3xl">
         <p className="text-sm text-muted">
           <Link href="/programs" className="hover:text-foreground">

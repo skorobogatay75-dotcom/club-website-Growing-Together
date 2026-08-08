@@ -5,8 +5,12 @@ import { getPublishedNewsBySlug } from "@/features/content/queries";
 import { getRelatedNews } from "@/features/news/queries";
 import { ContentBlocks } from "@/components/public/ContentBlocks";
 import { ShareButton } from "@/components/public/ShareButton";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { formatNewsDate } from "@/lib/format/datetime";
 import { isPublicText } from "@/lib/content/public-text";
+import { buildPageMetadata } from "@/lib/seo/metadata";
+import { articleJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
+import { publicStorageUrl } from "@/lib/media/public-url";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -15,11 +19,15 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPublishedNewsBySlug(slug);
-  if (!post) return { title: "Новость не найдена" };
-  return {
+  if (!post) return { title: "Новость не найдена", robots: { index: false } };
+  return buildPageMetadata({
     title: post.seo_title || post.title,
-    description: post.seo_description || post.excerpt || undefined,
-  };
+    description: post.seo_description || post.excerpt,
+    path: `/news/${post.slug}`,
+    imagePath: post.cover_path,
+    type: "article",
+    publishedTime: post.published_at,
+  });
 }
 
 export default async function NewsDetailPage({ params }: Props) {
@@ -30,9 +38,26 @@ export default async function NewsDetailPage({ params }: Props) {
   const related = await getRelatedNews(post);
   const dateLabel = formatNewsDate(post.published_at);
   const excerpt = isPublicText(post.excerpt) ? post.excerpt : null;
+  const image = publicStorageUrl("public-media", post.cover_path);
 
   return (
     <article className="section-space">
+      <JsonLd
+        data={articleJsonLd({
+          title: post.title,
+          description: excerpt,
+          path: `/news/${post.slug}`,
+          publishedAt: post.published_at,
+          image,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Главная", path: "/" },
+          { name: "Новости", path: "/news" },
+          { name: post.title, path: `/news/${post.slug}` },
+        ])}
+      />
       <div className="container-page max-w-3xl">
         <p className="text-sm text-muted">
           <Link href="/news" className="hover:text-foreground">

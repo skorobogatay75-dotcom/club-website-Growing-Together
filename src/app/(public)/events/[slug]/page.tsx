@@ -4,9 +4,8 @@ import { notFound } from "next/navigation";
 import { getPublishedEventBySlug } from "@/features/content/queries";
 import { getEventRemainingSeats } from "@/features/events/queries";
 import { ContentBlocks } from "@/components/public/ContentBlocks";
-import {
-  formatEventDateTime,
-} from "@/lib/format/datetime";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { formatEventDateTime } from "@/lib/format/datetime";
 import {
   audienceLabel,
   formatLabel,
@@ -14,6 +13,9 @@ import {
 } from "@/lib/format/labels";
 import { isPublicText, publicTextOrNull } from "@/lib/content/public-text";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { buildPageMetadata } from "@/lib/seo/metadata";
+import { breadcrumbJsonLd, eventJsonLd } from "@/lib/seo/json-ld";
+import { publicStorageUrl } from "@/lib/media/public-url";
 import type { AgeCategory } from "@/types/database";
 
 type Props = {
@@ -23,11 +25,13 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const event = await getPublishedEventBySlug(slug);
-  if (!event) return { title: "Событие не найдено" };
-  return {
+  if (!event) return { title: "Событие не найдено", robots: { index: false } };
+  return buildPageMetadata({
     title: event.seo_title || event.title,
-    description: event.seo_description || event.excerpt || undefined,
-  };
+    description: event.seo_description || event.excerpt,
+    path: `/events/${event.slug}`,
+    imagePath: event.cover_path,
+  });
 }
 
 export default async function EventDetailPage({ params }: Props) {
@@ -36,16 +40,38 @@ export default async function EventDetailPage({ params }: Props) {
   if (!event) notFound();
 
   const [remainingSeats, ageCategory] = await Promise.all([
-    event.capacity != null ? getEventRemainingSeats(event.id) : Promise.resolve(null),
+    event.capacity != null
+      ? getEventRemainingSeats(event.id)
+      : Promise.resolve(null),
     getAgeCategoryName(event.age_category_id),
   ]);
 
   const excerpt = isPublicText(event.excerpt) ? event.excerpt : null;
   const venue = publicTextOrNull(event.venue);
   const price = publicTextOrNull(event.price_text);
+  const image = publicStorageUrl("public-media", event.cover_path);
 
   return (
     <article className="section-space">
+      <JsonLd
+        data={eventJsonLd({
+          name: event.title,
+          description: excerpt,
+          startDate: event.starts_at,
+          endDate: event.ends_at,
+          path: `/events/${event.slug}`,
+          venue,
+          image,
+          status: event.registration_status,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Главная", path: "/" },
+          { name: "События", path: "/events" },
+          { name: event.title, path: `/events/${event.slug}` },
+        ])}
+      />
       <div className="container-page max-w-3xl">
         <p className="text-sm text-muted">
           <Link href="/events" className="hover:text-foreground">
