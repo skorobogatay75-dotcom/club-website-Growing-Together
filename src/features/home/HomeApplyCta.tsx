@@ -1,6 +1,9 @@
-import Link from "next/link";
+import { ApplicationForm } from "@/components/forms/ApplicationForm";
+import { getApplicationFormOptions } from "@/features/applications/options";
 
-export function HomeApplyCta() {
+export async function HomeApplyCta() {
+  const options = await getApplicationFormOptions();
+
   return (
     <section className="section-space">
       <div className="container-page">
@@ -9,12 +12,17 @@ export function HomeApplyCta() {
             Готовы присоединиться?
           </h2>
           <p className="mt-3 max-w-xl text-muted">
-            Оставьте короткую заявку — мы свяжемся с вами, чтобы уточнить
-            детали и подобрать подходящую встречу.
+            Короткая заявка: мы свяжемся с вами, чтобы уточнить детали и
+            подобрать встречу.
           </p>
-          <Link href="/apply" className="btn-primary mt-8 inline-flex">
-            Записаться
-          </Link>
+          <div className="mt-8 max-w-xl rounded-[var(--radius-card)] border border-border/70 bg-background/90 p-5 backdrop-blur-sm">
+            <ApplicationForm
+              options={options}
+              variant="compact"
+              source="home"
+              prefill={{ type: "general" }}
+            />
+          </div>
         </div>
       </div>
     </section>
