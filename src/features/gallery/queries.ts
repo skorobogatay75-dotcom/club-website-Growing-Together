@@ -1,9 +1,84 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { publicStorageUrl } from "@/lib/media/public-url";
+import {
+  albumYears,
+  filterAlbumsByYear,
+} from "@/features/gallery/album-filters";
 import type { Album, Photo } from "@/types/database";
 
-export type AlbumListItem = Album;
+export type AlbumWithCover = Album & {
+  cover_path: string | null;
+  cover_alt: string | null;
+};
 
-export async function listPublishedAlbums(): Promise<AlbumListItem[]> {
+export { albumYears, filterAlbumsByYear };
+
+async function resolveCovers(albums: Album[]): Promise<AlbumWithCover[]> {
+  if (albums.length === 0) return [];
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) {
+    return albums.map((album) => ({
+      ...album,
+      cover_path: null,
+      cover_alt: null,
+    }));
+  }
+
+  const coverIds = albums
+    .map((album) => album.cover_photo_id)
+    .filter((id): id is string => Boolean(id));
+
+  const coverById = new Map<string, Pick<Photo, "storage_path" | "alt">>();
+  if (coverIds.length > 0) {
+    const { data } = await supabase
+      .from("photos")
+      .select("id, storage_path, alt")
+      .in("id", coverIds);
+    for (const photo of data ?? []) {
+      coverById.set(photo.id as string, {
+        storage_path: photo.storage_path as string,
+        alt: photo.alt as string,
+      });
+    }
+  }
+
+  const missingAlbumIds = albums
+    .filter((album) => !album.cover_photo_id || !coverById.has(album.cover_photo_id))
+    .map((album) => album.id);
+
+  const fallbackByAlbum = new Map<string, Pick<Photo, "storage_path" | "alt">>();
+  if (missingAlbumIds.length > 0) {
+    const { data } = await supabase
+      .from("photos")
+      .select("album_id, storage_path, alt, sort_order")
+      .in("album_id", missingAlbumIds)
+      .order("sort_order", { ascending: true });
+
+    for (const photo of data ?? []) {
+      const albumId = photo.album_id as string;
+      if (!fallbackByAlbum.has(albumId)) {
+        fallbackByAlbum.set(albumId, {
+          storage_path: photo.storage_path as string,
+          alt: photo.alt as string,
+        });
+      }
+    }
+  }
+
+  return albums.map((album) => {
+    const cover =
+      (album.cover_photo_id ? coverById.get(album.cover_photo_id) : null) ??
+      fallbackByAlbum.get(album.id) ??
+      null;
+    return {
+      ...album,
+      cover_path: cover?.storage_path ?? null,
+      cover_alt: cover?.alt ?? null,
+    };
+  });
+}
+
+export async function listPublishedAlbums(): Promise<AlbumWithCover[]> {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return [];
 
@@ -20,7 +95,13 @@ export async function listPublishedAlbums(): Promise<AlbumListItem[]> {
     return [];
   }
 
-  return (data ?? []) as AlbumListItem[];
+  return resolveCovers((data ?? []) as Album[]);
+}
+
+export async function getAlbumCoverUrl(
+  album: Pick<AlbumWithCover, "cover_path">,
+): Promise<string | null> {
+  return publicStorageUrl("public-media", album.cover_path);
 }
 
 export async function getAlbumPhotos(albumId: string): Promise<Photo[]> {
@@ -41,4 +122,9 @@ export async function getAlbumPhotos(albumId: string): Promise<Photo[]> {
   }
 
   return (data ?? []) as Photo[];
+}
+
+export async function getLatestAlbumWithCover(): Promise<AlbumWithCover | null> {
+  const albums = await listPublishedAlbums();
+  return albums[0] ?? null;
 }

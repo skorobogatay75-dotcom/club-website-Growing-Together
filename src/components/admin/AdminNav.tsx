@@ -12,6 +12,7 @@ const ITEMS = [
   { href: "/admin/documents", label: "Документы" },
   { href: "/admin/applications", label: "Заявки" },
   { href: "/admin/membership", label: "Членство" },
+  { href: "/admin/team", label: "Команда" },
 ] as const;
 
 type Props = {

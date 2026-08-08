@@ -1,7 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useId, useCallback, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useCallback,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { isPublicText } from "@/lib/content/public-text";
 import { publicStorageUrl } from "@/lib/media/public-url";
@@ -13,6 +20,9 @@ type Props = {
 
 export function GalleryLightbox({ photos }: Props) {
   const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const lastFocusRef = useRef<HTMLElement | null>(null);
   const [index, setIndex] = useState<number | null>(null);
 
   const close = useCallback(() => setIndex(null), []);
@@ -22,7 +32,17 @@ export function GalleryLightbox({ photos }: Props) {
     : null;
 
   useEffect(() => {
-    if (index === null) return;
+    if (index === null) {
+      if (lastFocusRef.current) {
+        lastFocusRef.current.focus();
+        lastFocusRef.current = null;
+      }
+      return;
+    }
+
+    lastFocusRef.current = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -42,7 +62,23 @@ export function GalleryLightbox({ photos }: Props) {
             : (current - 1 + photos.length) % photos.length,
         );
       }
+      if (event.key === "Tab" && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
     };
+
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -51,6 +87,13 @@ export function GalleryLightbox({ photos }: Props) {
       document.body.style.overflow = prev;
     };
   }, [close, index, photos.length]);
+
+  const onThumbKey = (event: ReactKeyboardEvent, photoIndex: number) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setIndex(photoIndex);
+    }
+  };
 
   if (photos.length === 0) {
     return (
@@ -74,6 +117,7 @@ export function GalleryLightbox({ photos }: Props) {
                 type="button"
                 className="group relative block aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-ring"
                 onClick={() => setIndex(photoIndex)}
+                onKeyDown={(event) => onThumbKey(event, photoIndex)}
                 aria-label={`Открыть фото: ${alt}`}
               >
                 {url ? (
@@ -82,7 +126,7 @@ export function GalleryLightbox({ photos }: Props) {
                     alt={alt}
                     fill
                     sizes="(max-width: 1024px) 50vw, 33vw"
-                    className="object-cover transition-transform group-hover:scale-[1.02]"
+                    className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                   />
                 ) : (
                   <span className="flex h-full items-center justify-center px-4 text-sm text-muted">
@@ -104,6 +148,7 @@ export function GalleryLightbox({ photos }: Props) {
             onClick={close}
           />
           <div
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
@@ -113,8 +158,12 @@ export function GalleryLightbox({ photos }: Props) {
               <p id={titleId} className="text-sm font-medium">
                 {isPublicText(show.alt) ? show.alt : "Фотография с встречи клуба"}
                 {isPublicText(show.caption) ? ` — ${show.caption}` : ""}
+                <span className="ml-2 text-white/70">
+                  {(index ?? 0) + 1} / {photos.length}
+                </span>
               </p>
               <button
+                ref={closeRef}
                 type="button"
                 className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-[var(--radius-button)] border border-white/40"
                 aria-label="Закрыть"
@@ -130,6 +179,7 @@ export function GalleryLightbox({ photos }: Props) {
                 fill
                 sizes="100vw"
                 className="object-contain"
+                priority
               />
             </div>
             <div className="mt-3 flex justify-between gap-3">

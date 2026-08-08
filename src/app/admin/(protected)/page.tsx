@@ -137,17 +137,13 @@ export default async function AdminDashboardPage({
           <Link href="/admin/applications" className="btn-secondary">
             Заявки
           </Link>
-          <Link href="/admin/news" className="btn-secondary">
-            Новости
+          <Link href="/admin/gallery" className="btn-secondary">
+            Альбомы
           </Link>
-          <Link href="/admin/programs" className="btn-secondary">
-            Программы
+          <Link href="/admin/team" className="btn-secondary">
+            Команда
           </Link>
         </div>
-        <p className="mt-4 text-sm text-muted">
-          CRUD и загрузка медиа появятся на следующем этапе. Сейчас разделы
-          защищены входом и ролями.
-        </p>
       </section>
     </main>
   );

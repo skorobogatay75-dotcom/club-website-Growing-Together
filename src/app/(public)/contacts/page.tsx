@@ -4,7 +4,11 @@ import {
   getPublicContacts,
   hasAnyContact,
 } from "@/features/home/queries";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  getSettingMap,
+} from "@/features/admin/settings/queries";
+import { parseContactsSettings } from "@/features/admin/settings/parse";
+import { publicTextOrNull } from "@/lib/content/public-text";
 
 export const metadata: Metadata = {
   title: "Контакты",
@@ -13,12 +17,14 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
-type MessengerMap = Record<string, string>;
-
 export default async function ContactsPage() {
   const contacts = await getPublicContacts();
-  const messengers = await getMessengers();
-  const show = hasAnyContact(contacts) || Object.keys(messengers).length > 0;
+  const map = await getSettingMap();
+  const messengers = parseContactsSettings(map);
+  const telegram = publicTextOrNull(messengers.telegram);
+  const whatsapp = publicTextOrNull(messengers.whatsapp);
+  const show =
+    hasAnyContact(contacts) || Boolean(telegram) || Boolean(whatsapp);
 
   return (
     <section className="section-space">
@@ -57,13 +63,8 @@ export default async function ContactsPage() {
                 </a>
               </p>
             ) : null}
-            {Object.entries(messengers).map(([label, value]) =>
-              value ? (
-                <p key={label}>
-                  {label}: {value}
-                </p>
-              ) : null,
-            )}
+            {telegram ? <p>Telegram: {telegram}</p> : null}
+            {whatsapp ? <p>WhatsApp: {whatsapp}</p> : null}
           </address>
         ) : (
           <p className="mt-8 rounded-[var(--radius-card)] border border-border bg-surface px-5 py-4 text-sm text-muted">
@@ -78,28 +79,4 @@ export default async function ContactsPage() {
       </div>
     </section>
   );
-}
-
-async function getMessengers(): Promise<MessengerMap> {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) return {};
-
-  const { data, error } = await supabase
-    .from("site_settings")
-    .select("value_json")
-    .eq("key", "contacts.public")
-    .maybeSingle();
-
-  if (error || !data) return {};
-  const value = data.value_json as { messengers?: Record<string, unknown> };
-  const raw = value?.messengers;
-  if (!raw || typeof raw !== "object") return {};
-
-  const result: MessengerMap = {};
-  for (const [key, entry] of Object.entries(raw)) {
-    if (typeof entry === "string" && entry.trim() && !/нужно\s+заполнить/i.test(entry)) {
-      result[key] = entry.trim();
-    }
-  }
-  return result;
 }

@@ -1,11 +1,11 @@
 import {
   getFeaturedPrograms,
-  getLatestAlbum,
   getLatestNews,
   getPublishedMembershipPlans,
   getPublishedTeamMembers,
   getUpcomingEvents,
 } from "@/features/home/queries";
+import { getLatestAlbumWithCover } from "@/features/gallery/queries";
 import { HomeApplyCta } from "@/features/home/HomeApplyCta";
 import { HomeEvents } from "@/features/home/HomeEvents";
 import { HomeFormatSchema } from "@/features/home/HomeFormatSchema";
@@ -25,7 +25,7 @@ export default async function HomePage() {
     getFeaturedPrograms(6),
     getPublishedTeamMembers(),
     getPublishedMembershipPlans(),
-    getLatestAlbum(),
+    getLatestAlbumWithCover(),
   ]);
 
   return (
