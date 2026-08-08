@@ -392,7 +392,7 @@ on conflict (key) do update set
 insert into public.membership_plans (
   id, name, slug, description, benefits_json, price_text, period_text, sort_order, status
 ) values (
-  'g7777777-7777-4777-8777-777777777701',
+  'a7777777-7777-4777-8777-777777777701',
   'Базовое членство',
   'bazovoe-chlenstvo',
   'НУЖНО ЗАПОЛНИТЬ: описание и стоимость после утверждения тарифов.',
