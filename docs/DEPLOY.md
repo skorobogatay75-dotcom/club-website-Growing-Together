@@ -1,4 +1,4 @@
-# Деплой в production (Vercel + Supabase)
+# Деплой в production (Supabase + Vercel или Timeweb Cloud)
 
 Пошаговая инструкция для запуска сайта «Вместе растём» в интернете.
 
@@ -79,6 +79,27 @@ values (
 
 5. Deploy. После первого деплоя привяжите свой домен в **Project → Settings → Domains**.
 6. Убедитесь, что `NEXT_PUBLIC_SITE_URL` совпадает с финальным доменом, и обновите Redirect URLs в Supabase.
+
+## 3.1. Деплой на Timeweb Cloud (App Platform)
+
+Сайт — полноценный Next.js с SSR, middleware и server actions. На Timeweb нужен режим **с поддержкой SSR**, не static-only.
+
+1. Репозиторий уже на GitHub.
+2. [timeweb.cloud](https://timeweb.cloud) → **App Platform** → **Создать**.
+3. Тип: **Next.js**, Node.js **20+**.
+4. **Включите поддержку SSR** (иначе админка, заявки и календарь не будут работать как задумано).
+5. Репозиторий + ветка `main` (или ваша рабочая), автодеплой по желанию.
+6. Команды (если не подставились сами):
+   - установка: `npm ci` или `npm install`
+   - сборка: `npm run build`
+   - запуск: `npm start`
+7. Те же Environment Variables, что в таблице выше.  
+   `NEXT_PUBLIC_SITE_URL` = URL приложения Timeweb или ваш домен, **без** `/` в конце.
+8. После деплоя скопируйте публичный URL и добавьте в Supabase Auth → Redirect URLs:
+   - `https://ваш-url.timeweb.cloud/admin/auth/callback`
+9. Проверьте чеклист из раздела 4.
+
+Подробности Timeweb: [деплой Next.js](https://timeweb.cloud/docs/apps/deploying-frontend-apps/nextjs).
 
 ## 4. Проверка после деплоя
 
