@@ -238,6 +238,8 @@ create table if not exists public.photos (
   id uuid primary key default gen_random_uuid(),
   album_id uuid not null references public.albums (id) on delete cascade,
   storage_path text not null,
+  media_type text not null default 'image',
+  mime_type text,
   width integer,
   height integer,
   alt text not null default '',
@@ -247,7 +249,8 @@ create table if not exists public.photos (
   updated_at timestamptz not null default timezone('utc', now()),
   constraint photos_dimensions_check check (
     (width is null or width > 0) and (height is null or height > 0)
-  )
+  ),
+  constraint photos_media_type_check check (media_type in ('image', 'video'))
 );
 
 create index if not exists photos_album_sort_idx
@@ -948,7 +951,7 @@ create policy site_settings_admin_delete
 
 -- ===== supabase\migrations\20260808120005_storage.sql =====
 -- Этап 2: Storage buckets и политики
--- public-media — изображения (JPEG/PNG/WebP)
+-- public-media — изображения и видеофрагменты (JPEG/PNG/WebP/MP4/WebM)
 -- public-documents — PDF/DOCX
 -- Публичное чтение объектов; запись/обновление/удаление — только staff.
 
@@ -957,8 +960,14 @@ values (
   'public-media',
   'public-media',
   true,
-  10485760,
-  array['image/jpeg', 'image/png', 'image/webp']::text[]
+  52428800,
+  array[
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'video/mp4',
+    'video/webm'
+  ]::text[]
 )
 on conflict (id) do update set
   public = excluded.public,
@@ -1490,6 +1499,33 @@ on conflict (id) do update set
   description = excluded.description,
   status = 'draft',
   price_text = null;
+
+-- ===== supabase\migrations\20260809120001_gallery_video.sql =====
+alter table public.photos
+  add column if not exists media_type text not null default 'image';
+
+alter table public.photos
+  add column if not exists mime_type text;
+
+do $$ begin
+  alter table public.photos
+    add constraint photos_media_type_check
+    check (media_type in ('image', 'video'));
+exception
+  when duplicate_object then null;
+end $$;
+
+update storage.buckets
+set
+  file_size_limit = 52428800,
+  allowed_mime_types = array[
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'video/mp4',
+    'video/webm'
+  ]::text[]
+where id = 'public-media';
 
 commit;
 

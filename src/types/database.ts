@@ -151,10 +151,14 @@ export type Album = {
   updated_at: string;
 };
 
+export type GalleryMediaType = "image" | "video";
+
 export type Photo = {
   id: string;
   album_id: string;
   storage_path: string;
+  media_type: GalleryMediaType;
+  mime_type: string | null;
   width: number | null;
   height: number | null;
   alt: string;

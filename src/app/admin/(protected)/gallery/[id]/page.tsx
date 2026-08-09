@@ -12,13 +12,14 @@ import {
   saveAlbumAction,
   deleteAlbumAction,
   setAlbumStatusAction,
-  uploadPhotosAction,
   updatePhotoAction,
   deletePhotoAction,
   setAlbumCoverAction,
 } from "@/features/admin/gallery/actions";
 import { AdminFlash, AdminPageHeader, Field } from "@/components/admin/ui";
+import { AlbumMediaUploader } from "@/components/admin/AlbumMediaUploader";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
+import { isVideoMedia, mediaLabel } from "@/features/gallery/media-type";
 import { publicStorageUrl } from "@/lib/media/public-url";
 
 type Props = {
@@ -120,36 +121,23 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
         <ConfirmDeleteButton
           action={deleteAlbumAction}
           id={album.id}
-          confirmMessage="Удалить альбом и все фото?"
+          confirmMessage="Удалить альбом со всеми фото и видео?"
         />
       </div>
 
       <section className="mt-12 space-y-4">
-        <h2 className="text-lg font-semibold">Фотографии</h2>
-        <form
-          action={uploadPhotosAction}
-          className="flex flex-wrap items-end gap-3"
-          encType="multipart/form-data"
-        >
-          <input type="hidden" name="album_id" value={album.id} />
-          <Field label="Загрузить (несколько файлов)">
-            <input
-              className="field-input"
-              type="file"
-              name="photos"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-            />
-          </Field>
-          <button type="submit" className="btn-primary">
-            Загрузить
-          </button>
-        </form>
+        <h2 className="text-lg font-semibold">Фото и видео</h2>
+        <p className="text-sm text-muted">
+          Фото: JPEG, PNG, WebP до 10 МБ. Видеофрагменты: MP4 или WebM до 50 МБ.
+          Файлы загружаются напрямую в хранилище.
+        </p>
+        <AlbumMediaUploader albumId={album.id} />
 
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {photos.map((photo) => {
             const url = publicStorageUrl("public-media", photo.storage_path);
             const isCover = album.cover_photo_id === photo.id;
+            const video = isVideoMedia(photo);
             return (
               <li
                 key={photo.id}
@@ -157,14 +145,28 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
               >
                 {url ? (
                   <div className="relative mb-3 aspect-[4/3] overflow-hidden rounded-md bg-surface-soft">
-                    <Image
-                      src={url}
-                      alt={photo.alt}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      unoptimized
-                    />
+                    {video ? (
+                      <video
+                        src={url}
+                        muted
+                        playsInline
+                        preload="metadata"
+                        controls
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <Image
+                        src={url}
+                        alt={photo.alt}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        unoptimized
+                      />
+                    )}
+                    <span className="absolute left-2 top-2 rounded-[var(--radius-button)] bg-background/90 px-2 py-0.5 text-xs font-semibold text-foreground">
+                      {mediaLabel(photo)}
+                    </span>
                   </div>
                 ) : (
                   <p className="mb-3 text-xs text-muted">{photo.storage_path}</p>
@@ -176,7 +178,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                     className="field-input"
                     name="alt"
                     defaultValue={photo.alt}
-                    placeholder="Alt"
+                    placeholder={video ? "Название видео" : "Alt"}
                     required
                   />
                   <input
@@ -197,7 +199,11 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                   </button>
                 </form>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {isCover ? (
+                  {video ? (
+                    <span className="self-center text-xs text-muted">
+                      Видео не ставят в обложку
+                    </span>
+                  ) : isCover ? (
                     <span className="self-center text-xs font-medium text-accent">Обложка</span>
                   ) : (
                     <form action={setAlbumCoverAction}>
@@ -211,8 +217,8 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                   <ConfirmDeleteButton
                     action={deletePhotoAction}
                     id={photo.id}
-                    label="Удалить фото"
-                    confirmMessage="Удалить фото?"
+                    label={video ? "Удалить видео" : "Удалить фото"}
+                    confirmMessage={video ? "Удалить видео?" : "Удалить фото?"}
                     hiddenFields={{ album_id: album.id }}
                   />
                 </div>
@@ -221,7 +227,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
           })}
         </ul>
         {photos.length === 0 ? (
-          <p className="text-sm text-muted">Пока нет фотографий.</p>
+          <p className="text-sm text-muted">Пока нет фотографий и видео.</p>
         ) : null}
       </section>
     </div>

@@ -28,16 +28,21 @@ async function resolveCovers(albums: Album[]): Promise<AlbumWithCover[]> {
     .map((album) => album.cover_photo_id)
     .filter((id): id is string => Boolean(id));
 
-  const coverById = new Map<string, Pick<Photo, "storage_path" | "alt">>();
+  const coverById = new Map<
+    string,
+    Pick<Photo, "storage_path" | "alt" | "media_type">
+  >();
   if (coverIds.length > 0) {
     const { data } = await supabase
       .from("photos")
-      .select("id, storage_path, alt")
+      .select("id, storage_path, alt, media_type")
       .in("id", coverIds);
     for (const photo of data ?? []) {
+      if ((photo.media_type as string | null) === "video") continue;
       coverById.set(photo.id as string, {
         storage_path: photo.storage_path as string,
         alt: photo.alt as string,
+        media_type: (photo.media_type as Photo["media_type"]) ?? "image",
       });
     }
   }
@@ -46,20 +51,25 @@ async function resolveCovers(albums: Album[]): Promise<AlbumWithCover[]> {
     .filter((album) => !album.cover_photo_id || !coverById.has(album.cover_photo_id))
     .map((album) => album.id);
 
-  const fallbackByAlbum = new Map<string, Pick<Photo, "storage_path" | "alt">>();
+  const fallbackByAlbum = new Map<
+    string,
+    Pick<Photo, "storage_path" | "alt" | "media_type">
+  >();
   if (missingAlbumIds.length > 0) {
     const { data } = await supabase
       .from("photos")
-      .select("album_id, storage_path, alt, sort_order")
+      .select("album_id, storage_path, alt, sort_order, media_type")
       .in("album_id", missingAlbumIds)
       .order("sort_order", { ascending: true });
 
     for (const photo of data ?? []) {
+      if ((photo.media_type as string | null) === "video") continue;
       const albumId = photo.album_id as string;
       if (!fallbackByAlbum.has(albumId)) {
         fallbackByAlbum.set(albumId, {
           storage_path: photo.storage_path as string,
           alt: photo.alt as string,
+          media_type: (photo.media_type as Photo["media_type"]) ?? "image",
         });
       }
     }
@@ -111,7 +121,7 @@ export async function getAlbumPhotos(albumId: string): Promise<Photo[]> {
   const { data, error } = await supabase
     .from("photos")
     .select(
-      "id, album_id, storage_path, width, height, alt, caption, sort_order, created_at, updated_at",
+      "id, album_id, storage_path, media_type, mime_type, width, height, alt, caption, sort_order, created_at, updated_at",
     )
     .eq("album_id", albumId)
     .order("sort_order", { ascending: true });

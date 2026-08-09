@@ -7,10 +7,12 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/admin/slug";
 import {
   deleteStorageObject,
+  isImageMime,
   isMediaPathReferenced,
+  isVideoMime,
   uploadPublicMedia,
 } from "@/lib/admin/media";
-import type { ContentStatus } from "@/types/database";
+import type { ContentStatus, GalleryMediaType } from "@/types/database";
 
 function str(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -131,6 +133,80 @@ export async function setAlbumStatusAction(formData: FormData): Promise<void> {
   redirect(`/admin/gallery/${id}?ok=1`);
 }
 
+export async function registerAlbumMediaAction(payload: {
+  albumId: string;
+  items: Array<{ path: string; mime: string; filename: string }>;
+}): Promise<{ ok: true } | { ok: false; message: string }> {
+  await requireStaff();
+  const albumId = payload.albumId?.trim();
+  const supabase = await createSupabaseServerClient();
+  if (!supabase || !albumId) {
+    return { ok: false, message: "Альбом не найден." };
+  }
+
+  const items = payload.items ?? [];
+  if (items.length === 0) {
+    return { ok: false, message: "Нет загруженных файлов." };
+  }
+
+  const { data: album } = await supabase
+    .from("albums")
+    .select("id, slug")
+    .eq("id", albumId)
+    .maybeSingle();
+  if (!album) {
+    return { ok: false, message: "Альбом не найден." };
+  }
+
+  const prefix = `albums/${albumId}/`;
+  for (const item of items) {
+    if (
+      !item.path ||
+      item.path.includes("..") ||
+      !item.path.startsWith(prefix) ||
+      (!isVideoMime(item.mime) && !isImageMime(item.mime))
+    ) {
+      return { ok: false, message: "Некорректный файл." };
+    }
+  }
+
+  const { data: existing } = await supabase
+    .from("photos")
+    .select("sort_order")
+    .eq("album_id", albumId)
+    .order("sort_order", { ascending: false })
+    .limit(1);
+  let nextOrder = ((existing?.[0]?.sort_order as number | undefined) ?? -1) + 1;
+
+  for (const item of items) {
+    const mediaType: GalleryMediaType = isVideoMime(item.mime) ? "video" : "image";
+    const alt =
+      item.filename.replace(/\.[^.]+$/, "").slice(0, 120) ||
+      (mediaType === "video" ? "Видео" : "Фото");
+    const { error } = await supabase.from("photos").insert({
+      album_id: albumId,
+      storage_path: item.path,
+      media_type: mediaType,
+      mime_type: item.mime,
+      alt,
+      sort_order: nextOrder,
+    });
+    if (error) {
+      console.error("photos.insert_failed");
+      await deleteStorageObject("public-media", item.path);
+      return {
+        ok: false,
+        message:
+          "Файл загружен, но не сохранён в альбом. Возможно, не применена SQL-миграция для видео.",
+      };
+    }
+    nextOrder += 1;
+  }
+
+  revalidateGallery(album.slug as string);
+  return { ok: true };
+}
+
 export async function uploadPhotosAction(formData: FormData): Promise<void> {
   await requireStaff();
   const albumId = str(formData, "album_id");
@@ -158,10 +234,17 @@ export async function uploadPhotosAction(formData: FormData): Promise<void> {
     if (!uploaded.ok) {
       redirect(`/admin/gallery/${albumId}?error=${encodeURIComponent(uploaded.message)}`);
     }
-    const alt = file.name.replace(/\.[^.]+$/, "").slice(0, 120) || "Фото";
+    const mediaType: GalleryMediaType = isVideoMime(uploaded.mime)
+      ? "video"
+      : "image";
+    const alt =
+      file.name.replace(/\.[^.]+$/, "").slice(0, 120) ||
+      (mediaType === "video" ? "Видео" : "Фото");
     const { error } = await supabase.from("photos").insert({
       album_id: albumId,
       storage_path: uploaded.path,
+      media_type: mediaType,
+      mime_type: uploaded.mime,
       alt,
       sort_order: nextOrder,
     });
@@ -244,6 +327,25 @@ export async function setAlbumCoverAction(formData: FormData): Promise<void> {
   const photoId = str(formData, "photo_id");
   const supabase = await createSupabaseServerClient();
   if (!supabase || !albumId || !photoId) redirect("/admin/gallery?error=save");
+
+  const { data: photo } = await supabase
+    .from("photos")
+    .select("media_type")
+    .eq("id", photoId)
+    .eq("album_id", albumId)
+    .maybeSingle();
+
+  if (!photo) {
+    redirect(`/admin/gallery/${albumId}?error=save`);
+  }
+
+  if (photo.media_type === "video") {
+    redirect(
+      `/admin/gallery/${albumId}?error=${encodeURIComponent(
+        "Обложкой может быть только фотография",
+      )}`,
+    );
+  }
 
   const { error } = await supabase
     .from("albums")

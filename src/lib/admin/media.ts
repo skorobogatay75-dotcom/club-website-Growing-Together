@@ -1,55 +1,38 @@
 import { randomUUID } from "node:crypto";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  extensionForMime,
+  validateAlbumMediaFile,
+} from "@/lib/admin/media-shared";
 
-const MEDIA_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
+export {
+  extensionForMime,
+  IMAGE_MIME,
+  isImageMime,
+  isVideoMime,
+  MEDIA_MAX_BYTES,
+  validateAlbumMediaFile,
+  VIDEO_MAX_BYTES,
+  VIDEO_MIME,
+} from "@/lib/admin/media-shared";
+
 const DOC_MIME = new Set([
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]);
 
-export const MEDIA_MAX_BYTES = 10 * 1024 * 1024;
 export const DOC_MAX_BYTES = 20 * 1024 * 1024;
 
 export type UploadResult =
   | { ok: true; path: string; mime: string; size: number; filename: string }
   | { ok: false; message: string };
 
-function extensionForMime(mime: string): string {
-  switch (mime) {
-    case "image/jpeg":
-      return "jpg";
-    case "image/png":
-      return "png";
-    case "image/webp":
-      return "webp";
-    case "application/pdf":
-      return "pdf";
-    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-      return "docx";
-    default:
-      return "bin";
-  }
-}
-
 export async function uploadPublicMedia(
   file: File,
   folder: string,
 ): Promise<UploadResult> {
-  if (!file || file.size === 0) {
-    return { ok: false, message: "Файл не выбран." };
-  }
-  if (file.type === "image/heic" || file.type === "image/heif") {
-    return {
-      ok: false,
-      message: "Формат HEIC не поддерживается. Сохраните JPEG, PNG или WebP.",
-    };
-  }
-  if (!MEDIA_MIME.has(file.type)) {
-    return { ok: false, message: "Допустимы только JPEG, PNG и WebP." };
-  }
-  if (file.size > MEDIA_MAX_BYTES) {
-    return { ok: false, message: "Размер изображения больше 10 МБ." };
-  }
+  const validated = validateAlbumMediaFile(file);
+  if (!validated.ok) return validated;
 
   const supabase = await createSupabaseServerClient();
   if (!supabase) {

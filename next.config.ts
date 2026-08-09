@@ -2,6 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Альбомы: фото до 10 МБ, видеофрагменты до 50 МБ
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "52mb",
+    },
+  },
   images: {
     remotePatterns: [
       {

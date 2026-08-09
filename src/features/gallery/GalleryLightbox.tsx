@@ -9,14 +9,20 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { isPublicText } from "@/lib/content/public-text";
 import { publicStorageUrl } from "@/lib/media/public-url";
+import { isVideoMedia } from "@/features/gallery/media-type";
 import type { Photo } from "@/types/database";
 
 type Props = {
   photos: Photo[];
 };
+
+function itemTitle(item: Photo) {
+  if (isPublicText(item.alt)) return item.alt;
+  return isVideoMedia(item) ? "Видео с встречи клуба" : "Фотография с встречи клуба";
+}
 
 export function GalleryLightbox({ photos }: Props) {
   const titleId = useId();
@@ -30,6 +36,7 @@ export function GalleryLightbox({ photos }: Props) {
   const src = show
     ? publicStorageUrl("public-media", show.storage_path)
     : null;
+  const showIsVideo = show ? isVideoMedia(show) : false;
 
   useEffect(() => {
     if (index === null) {
@@ -64,7 +71,7 @@ export function GalleryLightbox({ photos }: Props) {
       }
       if (event.key === "Tab" && dialogRef.current) {
         const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+          'button, [href], input, select, textarea, video, [tabindex]:not([tabindex="-1"])',
         );
         if (focusable.length === 0) return;
         const first = focusable[0];
@@ -98,7 +105,7 @@ export function GalleryLightbox({ photos }: Props) {
   if (photos.length === 0) {
     return (
       <p className="mt-8 text-sm text-muted">
-        В этом альбоме пока нет опубликованных фотографий.
+        В этом альбоме пока нет фотографий и видео.
       </p>
     );
   }
@@ -108,9 +115,8 @@ export function GalleryLightbox({ photos }: Props) {
       <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {photos.map((photo, photoIndex) => {
           const url = publicStorageUrl("public-media", photo.storage_path);
-          const alt = isPublicText(photo.alt)
-            ? photo.alt
-            : "Фотография с встречи клуба";
+          const title = itemTitle(photo);
+          const video = isVideoMedia(photo);
           return (
             <li key={photo.id}>
               <button
@@ -118,12 +124,32 @@ export function GalleryLightbox({ photos }: Props) {
                 className="group relative block aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-ring"
                 onClick={() => setIndex(photoIndex)}
                 onKeyDown={(event) => onThumbKey(event, photoIndex)}
-                aria-label={`Открыть фото: ${alt}`}
+                aria-label={
+                  video ? `Открыть видео: ${title}` : `Открыть фото: ${title}`
+                }
               >
-                {url ? (
+                {url && video ? (
+                  <>
+                    <video
+                      src={url}
+                      muted
+                      playsInline
+                      preload="metadata"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                    />
+                    <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-brand-ink/25">
+                      <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-background/90 text-foreground shadow-soft">
+                        <Play aria-hidden="true" size={22} fill="currentColor" />
+                      </span>
+                    </span>
+                    <span className="absolute left-3 top-3 rounded-[var(--radius-button)] bg-background/90 px-2 py-1 text-xs font-semibold text-foreground">
+                      Видео
+                    </span>
+                  </>
+                ) : url ? (
                   <Image
                     src={url}
-                    alt={alt}
+                    alt={title}
                     fill
                     sizes="(max-width: 1024px) 50vw, 33vw"
                     className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
@@ -156,7 +182,7 @@ export function GalleryLightbox({ photos }: Props) {
           >
             <div className="mb-3 flex items-center justify-between gap-3 text-white">
               <p id={titleId} className="text-sm font-medium">
-                {isPublicText(show.alt) ? show.alt : "Фотография с встречи клуба"}
+                {itemTitle(show)}
                 {isPublicText(show.caption) ? ` — ${show.caption}` : ""}
                 <span className="ml-2 text-white/70">
                   {(index ?? 0) + 1} / {photos.length}
@@ -172,21 +198,34 @@ export function GalleryLightbox({ photos }: Props) {
                 <X aria-hidden="true" />
               </button>
             </div>
-            <div className="relative min-h-[50dvh] flex-1 overflow-hidden rounded-[var(--radius-card)] bg-brand-ink">
-              <Image
-                src={src}
-                alt={isPublicText(show.alt) ? show.alt : "Фотография с встречи клуба"}
-                fill
-                sizes="100vw"
-                className="object-contain"
-                priority
-              />
+            <div className="relative flex min-h-[50dvh] flex-1 items-center justify-center overflow-hidden rounded-[var(--radius-card)] bg-brand-ink">
+              {showIsVideo ? (
+                <video
+                  key={show.id}
+                  src={src}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="max-h-[75dvh] w-full object-contain"
+                >
+                  Ваш браузер не поддерживает воспроизведение видео.
+                </video>
+              ) : (
+                <Image
+                  src={src}
+                  alt={itemTitle(show)}
+                  fill
+                  sizes="100vw"
+                  className="object-contain"
+                  priority
+                />
+              )}
             </div>
             <div className="mt-3 flex justify-between gap-3">
               <button
                 type="button"
                 className="btn-secondary"
-                aria-label="Предыдущее фото"
+                aria-label="Предыдущий файл"
                 onClick={() =>
                   setIndex((current) =>
                     current === null
@@ -201,7 +240,7 @@ export function GalleryLightbox({ photos }: Props) {
               <button
                 type="button"
                 className="btn-secondary"
-                aria-label="Следующее фото"
+                aria-label="Следующий файл"
                 onClick={() =>
                   setIndex((current) =>
                     current === null ? 0 : (current + 1) % photos.length,

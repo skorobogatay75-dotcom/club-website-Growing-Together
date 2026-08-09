@@ -108,7 +108,7 @@ values (
 - [ ] `/admin/login` — вход админа
 - [ ] Создание черновика события и публикация → видно в календаре
 - [ ] Заявка с `/apply` появляется в `/admin/applications`
-- [ ] Загрузка JPEG/PNG/WebP в альбом и PDF/DOCX в документы
+- [ ] Загрузка JPEG/PNG/WebP и видео MP4/WebM в альбом; PDF/DOCX в документы
 - [ ] `/sitemap.xml` и `/robots.txt` отдают XML/текст
 - [ ] Письмо сброса пароля (если настроен SMTP/Resend в Auth) ведёт на `/admin/update-password`
 
@@ -119,7 +119,7 @@ values (
 | Пустой сайт, нет контента | Env Supabase, миграции, статус `published` |
 | Нельзя войти в админку | `profiles` с `is_active` и ролью `admin`/`editor` |
 | Заявки не сохраняются | `SUPABASE_SERVICE_ROLE_KEY` на Vercel |
-| Фото не грузятся | Storage buckets + политики; MIME JPEG/PNG/WebP |
+| Фото/видео не грузятся | Storage buckets + политики; MIME JPEG/PNG/WebP/MP4/WebM; лимит 50 МБ для видео |
 | Сброс пароля не работает | Redirect URLs + Site URL в Supabase Auth |
 | Неверные canonical/OG URL | `NEXT_PUBLIC_SITE_URL` |
 
