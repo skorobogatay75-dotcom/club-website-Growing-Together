@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
+import { themeInitScript } from "@/components/theme/theme-script";
 import { rootMetadata } from "@/lib/seo/metadata";
 import "./globals.css";
 
@@ -17,7 +18,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru">
+    <html lang="ru" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className={`${manrope.variable} font-sans antialiased`}>
         {children}
       </body>

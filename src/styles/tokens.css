@@ -4,6 +4,8 @@
  */
 
 :root {
+  color-scheme: light;
+
   /* Brand palette */
   --brand-terracotta: #a85645;
   --brand-honey: #e6a64c;
@@ -27,6 +29,9 @@
   --border: var(--brand-border);
   --ring: var(--brand-turquoise);
 
+  /* Hero veil (readable text over photo) */
+  --hero-veil: 255 243 234;
+
   /* Focus & states */
   --focus-ring: 0 0 0 3px color-mix(in srgb, var(--brand-turquoise) 55%, white);
 
@@ -37,8 +42,48 @@
 
   /* Shadows — едва заметные */
   --shadow-soft: 0 1px 2px rgb(47 41 38 / 4%), 0 8px 24px rgb(47 41 38 / 5%);
+  --shadow-button: 0 10px 24px rgb(168 86 69 / 18%);
+
+  /* Noise overlay */
+  --noise-opacity: 0.04;
+  --noise-blend: multiply;
 
   /* Typography scale */
   --text-body: 1.0625rem;
   --leading-body: 1.65;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --brand-terracotta: #c56d5a;
+  --brand-honey: #e8b05c;
+  --brand-turquoise: #8fc0be;
+  --brand-powder: #3d322c;
+  --brand-cream: #1a1614;
+  --brand-ink: #f3ebe3;
+  --brand-muted: #b6a99e;
+  --brand-border: #4a3f38;
+
+  --background: #1a1614;
+  --foreground: #f3ebe3;
+  --muted: #b6a99e;
+  --surface: #241f1c;
+  --surface-soft: #332b26;
+  --accent: var(--brand-terracotta);
+  --accent-hover: #d47e6b;
+  --accent-secondary: var(--brand-turquoise);
+  --accent-warm: var(--brand-honey);
+  --border: var(--brand-border);
+  --ring: var(--brand-turquoise);
+
+  --hero-veil: 26 22 20;
+
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--brand-turquoise) 45%, transparent);
+
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 28%), 0 12px 32px rgb(0 0 0 / 35%);
+  --shadow-button: 0 10px 28px rgb(197 109 90 / 28%);
+
+  --noise-opacity: 0.07;
+  --noise-blend: soft-light;
 }

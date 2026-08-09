@@ -11,6 +11,7 @@ import {
   useState,
   type KeyboardEvent,
 } from "react";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { SiteLogo } from "./SiteLogo";
 import { SITE_NAV } from "./nav";
 
@@ -110,6 +111,8 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <ThemeToggle />
+
           <Link href="/apply" className="btn-primary hidden sm:inline-flex">
             Записаться
           </Link>

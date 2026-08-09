@@ -65,9 +65,9 @@
     position: fixed;
     inset: 0;
     z-index: 1;
-    opacity: 0.04;
+    opacity: var(--noise-opacity);
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    mix-blend-mode: multiply;
+    mix-blend-mode: var(--noise-blend);
   }
 
   :focus-visible {
@@ -76,8 +76,8 @@
   }
 
   ::selection {
-    background: color-mix(in srgb, var(--brand-turquoise) 35%, white);
-    color: var(--brand-ink);
+    background: color-mix(in srgb, var(--brand-turquoise) 35%, var(--surface));
+    color: var(--foreground);
   }
 }
 
@@ -107,7 +107,7 @@
   }
 
   .btn-primary {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-button)] bg-accent px-5 py-2.5 text-[0.9375rem] font-semibold text-white shadow-[0_10px_24px_rgb(168_86_69_/_18%)] transition-[color,background-color,transform,box-shadow] hover:bg-accent-hover hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-button)] bg-accent px-5 py-2.5 text-[0.9375rem] font-semibold text-white shadow-[var(--shadow-button)] transition-[color,background-color,transform,box-shadow] hover:bg-accent-hover hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50;
   }
 
   .btn-secondary {
@@ -144,6 +144,21 @@
       radial-gradient(
         ellipse 60% 40% at 100% 10%,
         color-mix(in srgb, var(--brand-turquoise) 14%, transparent),
+        transparent 50%
+      ),
+      var(--background);
+  }
+
+  .dark .surface-paper {
+    background:
+      radial-gradient(
+        ellipse 70% 45% at 8% 0%,
+        color-mix(in srgb, var(--brand-terracotta) 18%, transparent),
+        transparent 55%
+      ),
+      radial-gradient(
+        ellipse 55% 40% at 100% 8%,
+        color-mix(in srgb, var(--brand-turquoise) 12%, transparent),
         transparent 50%
       ),
       var(--background);

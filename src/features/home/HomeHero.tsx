@@ -16,7 +16,7 @@ export function HomeHero() {
       {/* Читаемость текста слева, семья справа почти без вуали */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(105deg,rgb(255_243_234_/_92%)_0%,rgb(255_243_234_/_78%)_34%,rgb(255_243_234_/_28%)_58%,rgb(255_243_234_/_0%)_78%)]"
+        className="absolute inset-0 bg-[linear-gradient(105deg,rgb(var(--hero-veil)_/_92%)_0%,rgb(var(--hero-veil)_/_78%)_34%,rgb(var(--hero-veil)_/_28%)_58%,rgb(var(--hero-veil)_/_0%)_78%)]"
       />
       <div
         aria-hidden="true"
