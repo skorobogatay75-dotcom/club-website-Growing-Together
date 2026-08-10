@@ -83,8 +83,8 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-md">
-      <div className="container-page flex h-16 items-center justify-between gap-4 sm:h-[4.25rem]">
-        <SiteLogo />
+      <div className="container-page flex h-16 items-center justify-between gap-2 sm:h-[4.25rem] sm:gap-4">
+        <SiteLogo className="min-w-0" />
 
         <nav
           className="hidden items-center gap-1 lg:flex"
@@ -110,10 +110,13 @@ export function SiteHeader() {
           })}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <ThemeToggle />
 
-          <Link href="/apply" className="btn-primary hidden sm:inline-flex">
+          <Link
+            href="/apply"
+            className="btn-primary !min-h-10 !px-3 text-sm sm:!min-h-11 sm:!px-5 sm:text-[0.9375rem]"
+          >
             Записаться
           </Link>
 

@@ -106,7 +106,9 @@ export function EventsCalendar({
   useEffect(() => {
     if (!autoDetectView) return;
     const preferAgenda = window.matchMedia("(max-width: 1023px)").matches;
-    navigate({ view: preferAgenda ? "agenda" : "calendar" });
+    const preferred: EventsViewMode = preferAgenda ? "agenda" : "calendar";
+    if (preferred === view) return;
+    navigate({ view: preferred });
     // Только при первом заходе без view в URL
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoDetectView]);

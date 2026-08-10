@@ -11,7 +11,7 @@ type Props = {
 const SIZES = {
   sm: { mark: 40, word: "text-base sm:text-lg", gap: "gap-2.5" },
   md: { mark: 52, word: "text-lg sm:text-xl", gap: "gap-3" },
-  lg: { mark: 88, word: "text-3xl sm:text-4xl lg:text-[2.75rem]", gap: "gap-4 sm:gap-5" },
+  lg: { mark: 64, word: "text-2xl sm:text-3xl lg:text-[2.75rem]", gap: "gap-3 sm:gap-4 lg:gap-5" },
 } as const;
 
 export function SiteLogo({
