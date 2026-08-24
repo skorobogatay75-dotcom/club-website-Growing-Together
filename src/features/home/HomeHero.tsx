@@ -4,7 +4,7 @@ import { SiteLogo } from "@/components/public/SiteLogo";
 
 export function HomeHero() {
   return (
-    <section className="relative isolate min-h-[calc(100dvh-4.25rem)] overflow-hidden">
+    <section className="relative isolate min-h-[calc(100dvh-5rem)] overflow-hidden">
       <Image
         src="/brand/hero-family.png"
         alt=""
@@ -28,8 +28,8 @@ export function HomeHero() {
         className="absolute inset-0 bg-[linear-gradient(to_top,rgb(47_41_38_/_12%)_0%,transparent_28%)]"
       />
 
-      <div className="container-page relative flex min-h-[calc(100dvh-4.25rem)] items-center py-14 sm:py-16 lg:py-20">
-        <div className="max-w-xl">
+      <div className="container-page relative flex min-h-[calc(100dvh-5rem)] items-center py-14 sm:py-16 lg:py-20">
+        <div className="max-w-2xl">
           <div className="animate-fade-up">
             <SiteLogo size="lg" />
           </div>

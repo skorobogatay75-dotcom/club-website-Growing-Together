@@ -83,7 +83,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-md">
-      <div className="container-page flex h-16 items-center justify-between gap-2 sm:h-[4.25rem] sm:gap-4">
+      <div className="container-page flex h-[4.75rem] items-center justify-between gap-2 sm:h-20 sm:gap-4">
         <SiteLogo className="min-w-0" />
 
         <nav
