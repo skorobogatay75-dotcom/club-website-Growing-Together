@@ -5,7 +5,7 @@ import {
   registrationLabel,
 } from "@/lib/format/labels";
 import { isPublicText } from "@/lib/content/public-text";
-import { eventAgeLabel } from "@/features/events/queries";
+import { eventAgeLabel } from "@/features/events/event-labels";
 import type { EventWithCategory } from "./queries";
 
 type Props = {

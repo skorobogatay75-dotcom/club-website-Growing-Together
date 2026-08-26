@@ -3,7 +3,7 @@ import {
   formatEventTime,
 } from "@/lib/format/datetime";
 import { registrationLabel } from "@/lib/format/labels";
-import { eventAgeLabel, type CalendarEvent } from "@/features/events/queries";
+import { eventAgeLabel, type CalendarEvent } from "@/features/events/event-labels";
 
 const MAX_VISIBLE = 3;
 

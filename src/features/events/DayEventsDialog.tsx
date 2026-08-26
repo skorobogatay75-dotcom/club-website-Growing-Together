@@ -5,7 +5,7 @@ import Link from "next/link";
 import { X } from "lucide-react";
 import { formatEventTime } from "@/lib/format/datetime";
 import { registrationLabel } from "@/lib/format/labels";
-import { eventAgeLabel, type CalendarEvent } from "@/features/events/queries";
+import { eventAgeLabel, type CalendarEvent } from "@/features/events/event-labels";
 
 type Props = {
   dateLabel: string;

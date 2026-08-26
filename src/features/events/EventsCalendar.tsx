@@ -10,13 +10,13 @@ import {
   getWeekdayShortLabels,
   shiftMonth,
 } from "@/features/events/calendar-math";
-import type { CalendarEvent } from "@/features/events/queries";
+import type { CalendarEvent } from "@/features/events/event-labels";
 import type { MonthGrid } from "@/features/events/calendar-math";
 import { DayEventList } from "@/features/events/DayEventList";
 import { DayEventsDialog } from "@/features/events/DayEventsDialog";
 import { formatEventDate, formatEventTime } from "@/lib/format/datetime";
 import { registrationLabel } from "@/lib/format/labels";
-import { eventAgeLabel } from "@/features/events/queries";
+import { eventAgeLabel } from "@/features/events/event-labels";
 
 export type EventsViewMode = "calendar" | "agenda" | "list";
 
