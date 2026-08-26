@@ -180,7 +180,7 @@ export async function getPublishedEventsInRange(options: {
     const ageFilter = options.filters.age.trim().toLowerCase();
     events = events.filter((event) => {
       const label = eventAgeLabel(event);
-      return label?.toLowerCase() === ageFilter;
+      return label?.toLowerCase().includes(ageFilter) ?? false;
     });
   }
 

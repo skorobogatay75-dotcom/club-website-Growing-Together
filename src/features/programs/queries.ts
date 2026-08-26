@@ -93,7 +93,7 @@ export async function listPublishedPrograms(
     const ageFilter = filters.age.trim().toLowerCase();
     rows = rows.filter((row) => {
       const label = programAgeLabel(row);
-      return label?.toLowerCase() === ageFilter;
+      return label?.toLowerCase().includes(ageFilter) ?? false;
     });
   }
 

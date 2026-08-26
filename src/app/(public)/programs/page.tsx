@@ -70,18 +70,18 @@ export default async function ProgramsPage({
           </label>
           <label className="block text-sm">
             <span className="mb-1 block font-medium">Возраст</span>
-            <select
+            <input
               name="age"
+              list="program-age-options"
               defaultValue={age}
+              placeholder="Например: 7–10 лет"
               className="min-h-11 w-full rounded-[var(--radius-input)] border border-border bg-background px-3"
-            >
-              <option value="">Все</option>
+            />
+            <datalist id="program-age-options">
               {ageOptions.map((label) => (
-                <option key={label} value={label}>
-                  {label}
-                </option>
+                <option key={label} value={label} />
               ))}
-            </select>
+            </datalist>
           </label>
           <label className="block text-sm">
             <span className="mb-1 block font-medium">Аудитория</span>

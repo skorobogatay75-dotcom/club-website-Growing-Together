@@ -200,18 +200,18 @@ export function EventsCalendar({
       >
         <label className="block text-sm">
           <span className="mb-1 block font-medium text-foreground">Возраст</span>
-          <select
+          <input
             name="age"
+            list="event-age-options"
             defaultValue={filters.age}
+            placeholder="Например: 7–10 лет"
             className="min-h-11 w-full rounded-[var(--radius-input)] border border-border bg-background px-3"
-          >
-            <option value="">Все</option>
+          />
+          <datalist id="event-age-options">
             {ageOptions.map((label) => (
-              <option key={label} value={label}>
-                {label}
-              </option>
+              <option key={label} value={label} />
             ))}
-          </select>
+          </datalist>
         </label>
         <label className="block text-sm">
           <span className="mb-1 block font-medium text-foreground">Аудитория</span>
