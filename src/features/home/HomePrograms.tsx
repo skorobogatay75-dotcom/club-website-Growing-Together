@@ -5,6 +5,7 @@ import {
   formatLabel,
 } from "@/lib/format/labels";
 import { isPublicText, publicTextOrNull } from "@/lib/content/public-text";
+import { programAgeLabel } from "@/features/programs/queries";
 import type { ProgramWithCategory } from "./queries";
 
 type Props = {
@@ -36,7 +37,7 @@ export function HomePrograms({ programs }: Props) {
 
         <ul className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {programs.map((program) => {
-            const ageName = program.age_categories?.name;
+            const ageName = programAgeLabel(program);
             const duration = publicTextOrNull(program.duration_text);
             const excerpt = isPublicText(program.excerpt) ? program.excerpt : null;
 

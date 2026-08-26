@@ -6,6 +6,7 @@ import {
   getProgramDocuments,
   getProgramRelatedEvents,
   getRelatedPrograms,
+  programAgeLabel,
 } from "@/features/programs/queries";
 import { formatFileSize } from "@/features/documents/queries";
 import { ContentBlocks } from "@/components/public/ContentBlocks";
@@ -44,16 +45,18 @@ export default async function ProgramDetailPage({ params }: Props) {
   const program = await getPublishedProgramBySlug(slug);
   if (!program) notFound();
 
-  const [relatedEvents, relatedPrograms, documents, ageName] = await Promise.all([
+  const [relatedEvents, relatedPrograms, documents] = await Promise.all([
     getProgramRelatedEvents(program.id),
     getRelatedPrograms(program),
     getProgramDocuments(program.id),
-    getAgeCategoryName(program.age_category_id),
   ]);
 
   const excerpt = isPublicText(program.excerpt) ? program.excerpt : null;
   const duration = publicTextOrNull(program.duration_text);
   const price = publicTextOrNull(program.price_text);
+  const ageName =
+    programAgeLabel(program) ??
+    (await getAgeCategoryName(program.age_category_id));
 
   return (
     <article className="section-space">

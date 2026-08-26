@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth/session";
 import {
   getAdminProgram,
-  listAgeCategoriesAdmin,
   listDocumentsForProgramPicker,
   listProgramDocumentIds,
 } from "@/features/admin/programs/queries";
@@ -17,9 +16,8 @@ export const metadata: Metadata = { title: "Редактирование про�
 export default async function EditProgramPage({ params }: Props) {
   await requireStaff();
   const { id } = await params;
-  const [program, categories, documents, selectedDocumentIds] = await Promise.all([
+  const [program, documents, selectedDocumentIds] = await Promise.all([
     getAdminProgram(id),
-    listAgeCategoriesAdmin(),
     listDocumentsForProgramPicker(),
     listProgramDocumentIds(id),
   ]);
@@ -31,7 +29,6 @@ export default async function EditProgramPage({ params }: Props) {
       <div className="mt-6">
         <ProgramForm
           program={program}
-          categories={categories}
           documents={documents}
           selectedDocumentIds={selectedDocumentIds}
         />

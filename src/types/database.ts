@@ -69,6 +69,7 @@ export type Program = {
   content_json: Json;
   cover_path: string | null;
   age_category_id: string | null;
+  age_text: string | null;
   audience_type: AudienceType;
   format: EventFormat;
   duration_text: string | null;

@@ -7,19 +7,17 @@ import {
 import { contentJsonToText } from "@/lib/admin/content-json";
 import { Field } from "@/components/admin/ui";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
-import type { AgeCategory, Document, Program } from "@/types/database";
+import type { Document, Program } from "@/types/database";
 import { slugify } from "@/lib/admin/slug";
 
 type Props = {
   program?: Program | null;
-  categories: AgeCategory[];
   documents?: Pick<Document, "id" | "title" | "status" | "mime_type">[];
   selectedDocumentIds?: string[];
 };
 
 export function ProgramForm({
   program,
-  categories,
   documents = [],
   selectedDocumentIds = [],
 }: Props) {
@@ -73,32 +71,14 @@ export function ProgramForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
             label="Возраст"
-            hint={
-              categories.length === 0
-                ? "Список пуст: в базе нет возрастных категорий. Выполните supabase/seed-age-categories.sql в Supabase."
-                : "Категория для фильтра на сайте и карточки программы"
-            }
+            hint="Свободный текст, например: 7–10 лет, подростки, вся семья"
           >
-            <select
+            <input
               className="field-input"
-              name="age_category_id"
-              defaultValue={program?.age_category_id ?? ""}
-              disabled={categories.length === 0}
-            >
-              <option value="">
-                {categories.length === 0 ? "Нет категорий в базе" : "Не выбрано"}
-              </option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                  {category.age_from != null || category.age_to != null
-                    ? ` (${[category.age_from, category.age_to]
-                        .filter((v) => v != null)
-                        .join("–")} лет)`
-                    : ""}
-                </option>
-              ))}
-            </select>
+              name="age_text"
+              defaultValue={program?.age_text ?? ""}
+              placeholder="Например: 7–10 лет"
+            />
           </Field>
           <Field label="Статус">
             <select

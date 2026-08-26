@@ -3,7 +3,6 @@ import Link from "next/link";
 import { requireStaff } from "@/lib/auth/session";
 import {
   listAdminPrograms,
-  listAgeCategoriesAdmin,
 } from "@/features/admin/programs/queries";
 import { AdminFlash, AdminPageHeader, StatusBadge } from "@/components/admin/ui";
 import { setProgramStatusAction } from "@/features/admin/programs/actions";
@@ -28,7 +27,6 @@ export default async function AdminProgramsPage({
     q: q || undefined,
     status: status || undefined,
   });
-  await listAgeCategoriesAdmin();
 
   const ok = first(params.ok);
   const error = first(params.error);

@@ -8,6 +8,7 @@ import type {
   EventFormat,
   Program,
 } from "@/types/database";
+import { isPublicText } from "@/lib/content/public-text";
 
 export type ProgramCard = Program & {
   age_categories: Pick<AgeCategory, "name" | "slug" | "color_token"> | null;
@@ -25,12 +26,25 @@ function normalizeAgeCategory(
   return value;
 }
 
+/** Возраст для карточки: свой текст или старая категория. */
+export function programAgeLabel(program: {
+  age_text?: string | null;
+  age_categories?: { name?: string | null } | null;
+}): string | null {
+  if (isPublicText(program.age_text)) return program.age_text.trim();
+  const name = program.age_categories?.name;
+  return isPublicText(name) ? name.trim() : null;
+}
+
 export type ProgramFilters = {
   q?: string;
   age?: string;
   audience?: AudienceType;
   enrollment?: EnrollmentStatus;
 };
+
+const PROGRAM_SELECT =
+  "id, title, slug, excerpt, content_json, cover_path, age_category_id, age_text, audience_type, format, duration_text, price_text, enrollment_status, featured, sort_order, status, seo_title, seo_description, published_at, created_by, updated_by, created_at, updated_at, age_categories ( name, slug, color_token )";
 
 export async function listPublishedPrograms(
   filters: ProgramFilters = {},
@@ -40,9 +54,7 @@ export async function listPublishedPrograms(
 
   let query = supabase
     .from("programs")
-    .select(
-      "id, title, slug, excerpt, content_json, cover_path, age_category_id, audience_type, format, duration_text, price_text, enrollment_status, featured, sort_order, status, seo_title, seo_description, published_at, created_by, updated_by, created_at, updated_at, age_categories ( name, slug, color_token )",
-    )
+    .select(PROGRAM_SELECT)
     .eq("status", "published")
     .order("featured", { ascending: false })
     .order("sort_order", { ascending: true });
@@ -78,10 +90,24 @@ export async function listPublishedPrograms(
   );
 
   if (filters.age) {
-    rows = rows.filter((row) => row.age_categories?.slug === filters.age);
+    const ageFilter = filters.age.trim().toLowerCase();
+    rows = rows.filter((row) => {
+      const label = programAgeLabel(row);
+      return label?.toLowerCase() === ageFilter;
+    });
   }
 
   return rows;
+}
+
+export async function listProgramAgeFilterOptions(): Promise<string[]> {
+  const programs = await listPublishedPrograms();
+  const labels = new Set<string>();
+  for (const program of programs) {
+    const label = programAgeLabel(program);
+    if (label) labels.add(label);
+  }
+  return Array.from(labels).sort((a, b) => a.localeCompare(b, "ru"));
 }
 
 export async function getRelatedPrograms(

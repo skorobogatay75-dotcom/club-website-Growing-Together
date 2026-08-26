@@ -56,7 +56,7 @@ export async function getPublishedProgramBySlug(
   const { data, error } = await supabase
     .from("programs")
     .select(
-      "id, title, slug, excerpt, content_json, cover_path, age_category_id, audience_type, format, duration_text, price_text, enrollment_status, featured, sort_order, status, seo_title, seo_description, published_at, created_by, updated_by, created_at, updated_at",
+      "id, title, slug, excerpt, content_json, cover_path, age_category_id, age_text, audience_type, format, duration_text, price_text, enrollment_status, featured, sort_order, status, seo_title, seo_description, published_at, created_by, updated_by, created_at, updated_at",
     )
     .eq("status", "published")
     .eq("slug", slug)

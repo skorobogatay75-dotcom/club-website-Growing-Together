@@ -1,7 +1,10 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
-import { listPublishedPrograms } from "@/features/programs/queries";
-import { getActiveAgeCategories } from "@/features/events/queries";
+import {
+  listProgramAgeFilterOptions,
+  listPublishedPrograms,
+  programAgeLabel,
+} from "@/features/programs/queries";
 import {
   audienceLabel,
   enrollmentLabel,
@@ -35,14 +38,14 @@ export default async function ProgramsPage({
   const audience = (first(params.audience) ?? "") as AudienceType | "";
   const enrollment = (first(params.enrollment) ?? "") as EnrollmentStatus | "";
 
-  const [programs, categories] = await Promise.all([
+  const [programs, ageOptions] = await Promise.all([
     listPublishedPrograms({
       q: q || undefined,
       age: age || undefined,
       audience: audience || undefined,
       enrollment: enrollment || undefined,
     }),
-    getActiveAgeCategories(),
+    listProgramAgeFilterOptions(),
   ]);
 
   return (
@@ -73,9 +76,9 @@ export default async function ProgramsPage({
               className="min-h-11 w-full rounded-[var(--radius-input)] border border-border bg-background px-3"
             >
               <option value="">Все</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.slug}>
-                  {category.name}
+              {ageOptions.map((label) => (
+                <option key={label} value={label}>
+                  {label}
                 </option>
               ))}
             </select>
@@ -124,6 +127,7 @@ export default async function ProgramsPage({
             {programs.map((program) => {
               const excerpt = isPublicText(program.excerpt) ? program.excerpt : null;
               const duration = publicTextOrNull(program.duration_text);
+              const ageLabel = programAgeLabel(program);
               return (
                 <li key={program.id}>
                   <Link
@@ -131,9 +135,9 @@ export default async function ProgramsPage({
                     className="flex h-full flex-col rounded-[var(--radius-card)] border border-border bg-surface p-5 transition-colors hover:bg-surface-soft"
                   >
                     <div className="flex flex-wrap gap-2 text-xs font-medium text-muted">
-                      {program.age_categories?.name ? (
+                      {ageLabel ? (
                         <span className="rounded-md bg-background px-2 py-1">
-                          {program.age_categories.name}
+                          {ageLabel}
                         </span>
                       ) : null}
                       <span className="rounded-md bg-background px-2 py-1">
