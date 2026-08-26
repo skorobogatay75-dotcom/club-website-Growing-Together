@@ -8,15 +8,14 @@ import { isoToLocalInput } from "@/lib/admin/datetime";
 import { contentJsonToText } from "@/lib/admin/content-json";
 import { Field } from "@/components/admin/ui";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
-import type { AgeCategory, Event, Program } from "@/types/database";
+import type { Event, Program } from "@/types/database";
 
 type Props = {
   event?: Event | null;
-  categories: AgeCategory[];
   programs: Pick<Program, "id" | "title">[];
 };
 
-export function EventForm({ event, categories, programs }: Props) {
+export function EventForm({ event, programs }: Props) {
   return (
     <div className="space-y-8">
       <form action={saveEventAction} className="space-y-5" encType="multipart/form-data">
@@ -68,19 +67,16 @@ export function EventForm({ event, categories, programs }: Props) {
               ))}
             </select>
           </Field>
-          <Field label="Возраст">
-            <select
+          <Field
+            label="Возраст"
+            hint="Свободный текст, например: 7–10 лет, подростки, вся семья"
+          >
+            <input
               className="field-input"
-              name="age_category_id"
-              defaultValue={event?.age_category_id ?? ""}
-            >
-              <option value="">Не выбрано</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+              name="age_text"
+              defaultValue={event?.age_text ?? ""}
+              placeholder="Например: 7–10 лет"
+            />
           </Field>
           <Field label="Аудитория">
             <select className="field-input" name="audience_type" defaultValue={event?.audience_type ?? "family"}>

@@ -3,7 +3,7 @@ import {
   formatEventTime,
 } from "@/lib/format/datetime";
 import { registrationLabel } from "@/lib/format/labels";
-import type { CalendarEvent } from "@/features/events/queries";
+import { eventAgeLabel, type CalendarEvent } from "@/features/events/queries";
 
 const MAX_VISIBLE = 3;
 
@@ -34,9 +34,9 @@ export function DayEventList({ events, onShowAll }: Props) {
                 {formatEventTime(event.starts_at)}
               </span>{" "}
               <span className="break-words">{event.title}</span>
-              {event.age_categories?.name ? (
+              {eventAgeLabel(event) ? (
                 <span className="mt-0.5 block text-[0.65rem] text-muted no-underline">
-                  {event.age_categories.name}
+                  {eventAgeLabel(event)}
                 </span>
               ) : null}
               <span className="sr-only">

@@ -33,7 +33,7 @@ export async function getPublishedEventBySlug(
   const { data, error } = await supabase
     .from("events")
     .select(
-      "id, program_id, title, slug, excerpt, content_json, cover_path, age_category_id, audience_type, format, starts_at, ends_at, timezone, venue, price_text, capacity, registration_status, featured, status, seo_title, seo_description, published_at, created_by, updated_by, created_at, updated_at",
+      "id, program_id, title, slug, excerpt, content_json, cover_path, age_category_id, age_text, audience_type, format, starts_at, ends_at, timezone, venue, price_text, capacity, registration_status, featured, status, seo_title, seo_description, published_at, created_by, updated_by, created_at, updated_at",
     )
     .eq("status", "published")
     .eq("slug", slug)

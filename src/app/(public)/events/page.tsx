@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import {
-  getActiveAgeCategories,
+  listEventAgeFilterOptions,
   getNearestUpcomingEventSlug,
   getPublishedEventsInRange,
   groupEventsByDateKey,
@@ -52,7 +52,7 @@ export default async function EventsPage({
     format: (first(params.format) ?? "") as EventFormat | "",
   };
 
-  const [{ events, grid, error }, categories, nearestSlug] = await Promise.all([
+  const [{ events, grid, error }, ageOptions, nearestSlug] = await Promise.all([
     getPublishedEventsInRange({
       year,
       month,
@@ -62,7 +62,7 @@ export default async function EventsPage({
         format: filters.format || undefined,
       },
     }),
-    getActiveAgeCategories(),
+    listEventAgeFilterOptions(),
     getNearestUpcomingEventSlug(),
   ]);
 
@@ -92,7 +92,7 @@ export default async function EventsPage({
           grid={grid}
           eventsByDay={eventsByDay}
           events={events}
-          categories={categories}
+          ageOptions={ageOptions}
           error={error}
           todayKey={today.dateKey}
           nearestHref={nearestHref}

@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublishedEventBySlug } from "@/features/content/queries";
-import { getEventRemainingSeats } from "@/features/events/queries";
+import {
+  eventAgeLabel,
+  getEventRemainingSeats,
+} from "@/features/events/queries";
 import { ContentBlocks } from "@/components/public/ContentBlocks";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { formatEventDateTime } from "@/lib/format/datetime";
@@ -12,10 +15,10 @@ import {
   registrationLabel,
 } from "@/lib/format/labels";
 import { isPublicText, publicTextOrNull } from "@/lib/content/public-text";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { breadcrumbJsonLd, eventJsonLd } from "@/lib/seo/json-ld";
 import { publicStorageUrl } from "@/lib/media/public-url";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { AgeCategory } from "@/types/database";
 
 type Props = {
@@ -39,17 +42,18 @@ export default async function EventDetailPage({ params }: Props) {
   const event = await getPublishedEventBySlug(slug);
   if (!event) notFound();
 
-  const [remainingSeats, ageCategory] = await Promise.all([
+  const [remainingSeats] = await Promise.all([
     event.capacity != null
       ? getEventRemainingSeats(event.id)
       : Promise.resolve(null),
-    getAgeCategoryName(event.age_category_id),
   ]);
 
   const excerpt = isPublicText(event.excerpt) ? event.excerpt : null;
   const venue = publicTextOrNull(event.venue);
   const price = publicTextOrNull(event.price_text);
   const image = publicStorageUrl("public-media", event.cover_path);
+  const ageCategory =
+    eventAgeLabel(event) ?? (await getAgeCategoryName(event.age_category_id));
 
   return (
     <article className="section-space">

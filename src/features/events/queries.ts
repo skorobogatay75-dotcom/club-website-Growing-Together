@@ -5,6 +5,7 @@ import {
   dateKeyInTimeZone,
   monthRangeUtcIso,
 } from "@/features/events/calendar-math";
+import { isPublicText } from "@/lib/content/public-text";
 import type {
   AgeCategory,
   AudienceType,
@@ -30,6 +31,7 @@ export type CalendarEvent = Pick<
   | "audience_type"
   | "format"
   | "age_category_id"
+  | "age_text"
   | "status"
 > & {
   age_categories: Pick<AgeCategory, "name" | "slug" | "color_token"> | null;
@@ -53,6 +55,16 @@ function normalizeAgeCategory(
   return value;
 }
 
+/** Возраст события: свой текст или старая категория. */
+export function eventAgeLabel(event: {
+  age_text?: string | null;
+  age_categories?: { name?: string | null } | null;
+}): string | null {
+  if (isPublicText(event.age_text)) return event.age_text.trim();
+  const name = event.age_categories?.name;
+  return isPublicText(name) ? name.trim() : null;
+}
+
 export async function getActiveAgeCategories(): Promise<AgeCategoryRef[]> {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return [];
@@ -69,6 +81,36 @@ export async function getActiveAgeCategories(): Promise<AgeCategoryRef[]> {
   }
 
   return (data ?? []) as AgeCategoryRef[];
+}
+
+export async function listEventAgeFilterOptions(): Promise<string[]> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("events")
+    .select("age_text, age_categories ( name )")
+    .eq("status", "published");
+
+  if (error) {
+    console.error("listEventAgeFilterOptions failed");
+    return [];
+  }
+
+  const labels = new Set<string>();
+  for (const row of data ?? []) {
+    const label = eventAgeLabel({
+      age_text: (row as { age_text?: string | null }).age_text,
+      age_categories: normalizeAgeCategory(
+        (row as { age_categories?: unknown }).age_categories as
+          | Pick<AgeCategory, "name" | "slug" | "color_token">
+          | Pick<AgeCategory, "name" | "slug" | "color_token">[]
+          | null,
+      ),
+    });
+    if (label) labels.add(label);
+  }
+  return Array.from(labels).sort((a, b) => a.localeCompare(b, "ru"));
 }
 
 export async function getPublishedEventsInRange(options: {
@@ -96,20 +138,12 @@ export async function getPublishedEventsInRange(options: {
   let query = supabase
     .from("events")
     .select(
-      "id, title, slug, excerpt, starts_at, ends_at, timezone, venue, price_text, capacity, registration_status, audience_type, format, age_category_id, status, age_categories ( name, slug, color_token )",
+      "id, title, slug, excerpt, starts_at, ends_at, timezone, venue, price_text, capacity, registration_status, audience_type, format, age_category_id, age_text, status, age_categories ( name, slug, color_token )",
     )
     .eq("status", "published")
     .lte("starts_at", endIso)
     .gte("ends_at", startIso)
     .order("starts_at", { ascending: true });
-
-  if (options.filters?.age) {
-    const categories = await getActiveAgeCategories();
-    const match = categories.find((c) => c.slug === options.filters?.age);
-    if (match) {
-      query = query.eq("age_category_id", match.id);
-    }
-  }
 
   if (options.filters?.audience) {
     query = query.eq("audience_type", options.filters.audience);
@@ -130,7 +164,7 @@ export async function getPublishedEventsInRange(options: {
     };
   }
 
-  const events = (
+  let events = (
     (data ?? []) as unknown as Array<CalendarEvent & { age_categories?: unknown }>
   ).map((row) => ({
     ...row,
@@ -141,6 +175,14 @@ export async function getPublishedEventsInRange(options: {
         | null,
     ),
   }));
+
+  if (options.filters?.age) {
+    const ageFilter = options.filters.age.trim().toLowerCase();
+    events = events.filter((event) => {
+      const label = eventAgeLabel(event);
+      return label?.toLowerCase() === ageFilter;
+    });
+  }
 
   return { events, grid, error: null };
 }

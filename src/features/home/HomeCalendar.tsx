@@ -1,5 +1,5 @@
 import {
-  getActiveAgeCategories,
+  listEventAgeFilterOptions,
   getNearestUpcomingEventSlug,
   getPublishedEventsInRange,
   groupEventsByDateKey,
@@ -33,9 +33,9 @@ export async function HomeCalendar({
       ? viewParam
       : "auto";
 
-  const [{ events, grid, error }, categories, nearestSlug] = await Promise.all([
+  const [{ events, grid, error }, ageOptions, nearestSlug] = await Promise.all([
     getPublishedEventsInRange({ year, month }),
-    getActiveAgeCategories(),
+    listEventAgeFilterOptions(),
     getNearestUpcomingEventSlug(),
   ]);
 
@@ -65,7 +65,7 @@ export async function HomeCalendar({
           grid={grid}
           eventsByDay={eventsByDay}
           events={events}
-          categories={categories}
+          ageOptions={ageOptions}
           error={error}
           todayKey={today.dateKey}
           nearestHref={nearestHref}

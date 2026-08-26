@@ -5,6 +5,7 @@ import {
   registrationLabel,
 } from "@/lib/format/labels";
 import { isPublicText } from "@/lib/content/public-text";
+import { eventAgeLabel } from "@/features/events/queries";
 import type { EventWithCategory } from "./queries";
 
 type Props = {
@@ -36,7 +37,7 @@ export function HomeEvents({ events }: Props) {
 
         <ul className="mt-8 grid gap-4 md:grid-cols-2">
           {events.map((event) => {
-            const ageName = event.age_categories?.name;
+            const ageName = eventAgeLabel(event);
             const cancelled = event.registration_status === "cancelled";
 
             return (

@@ -16,7 +16,7 @@ import { DayEventList } from "@/features/events/DayEventList";
 import { DayEventsDialog } from "@/features/events/DayEventsDialog";
 import { formatEventDate, formatEventTime } from "@/lib/format/datetime";
 import { registrationLabel } from "@/lib/format/labels";
-import type { AgeCategoryRef } from "@/features/events/queries";
+import { eventAgeLabel } from "@/features/events/queries";
 
 export type EventsViewMode = "calendar" | "agenda" | "list";
 
@@ -36,7 +36,7 @@ type Props = {
   grid: MonthGrid;
   eventsByDay: Record<string, CalendarEvent[]>;
   events: CalendarEvent[];
-  categories: AgeCategoryRef[];
+  ageOptions: string[];
   error: string | null;
   todayKey: string;
   nearestHref: string;
@@ -62,7 +62,7 @@ export function EventsCalendar({
   grid,
   eventsByDay,
   events,
-  categories,
+  ageOptions,
   error,
   todayKey,
   nearestHref,
@@ -205,10 +205,10 @@ export function EventsCalendar({
             defaultValue={filters.age}
             className="min-h-11 w-full rounded-[var(--radius-input)] border border-border bg-background px-3"
           >
-            <option value="">Все категории</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.slug}>
-                {category.name}
+            <option value="">Все</option>
+            {ageOptions.map((label) => (
+              <option key={label} value={label}>
+                {label}
               </option>
             ))}
           </select>
@@ -417,7 +417,7 @@ export function EventsCalendar({
                         </p>
                         <p className="mt-1 text-sm text-muted">
                           {[
-                            event.age_categories?.name,
+                            eventAgeLabel(event),
                             registrationLabel(event.registration_status),
                           ]
                             .filter(Boolean)

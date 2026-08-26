@@ -5,7 +5,7 @@ import Link from "next/link";
 import { X } from "lucide-react";
 import { formatEventTime } from "@/lib/format/datetime";
 import { registrationLabel } from "@/lib/format/labels";
-import type { CalendarEvent } from "@/features/events/queries";
+import { eventAgeLabel, type CalendarEvent } from "@/features/events/queries";
 
 type Props = {
   dateLabel: string;
@@ -75,7 +75,7 @@ export function DayEventsDialog({ dateLabel, events, onClose }: Props) {
                 </p>
                 <p className="mt-1 text-xs text-muted">
                   {[
-                    event.age_categories?.name,
+                    eventAgeLabel(event),
                     registrationLabel(event.registration_status),
                   ]
                     .filter(Boolean)
