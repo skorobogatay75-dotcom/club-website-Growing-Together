@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireStaff, canManageSettings } from "@/lib/auth/session";
 import { logoutAction } from "@/lib/auth/actions";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { APP_VERSION } from "@/lib/app-version";
 
 export default async function AdminProtectedLayout({
   children,
@@ -19,7 +20,10 @@ export default async function AdminProtectedLayout({
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
               Вместе растём
             </p>
-            <p className="text-sm font-semibold text-foreground">Админ-панель</p>
+            <p className="text-sm font-semibold text-foreground">
+              Админ-панель
+              <span className="ml-2 text-xs font-normal text-muted">v{APP_VERSION}</span>
+            </p>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-sm">
             <span className="text-muted">

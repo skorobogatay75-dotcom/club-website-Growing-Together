@@ -11,6 +11,7 @@ import {
   isMediaPathReferenced,
   uploadPublicMedia,
 } from "@/lib/admin/media";
+import { adminSaveErrorParam } from "@/lib/admin/save-error";
 import type {
   AudienceType,
   ContentStatus,
@@ -106,8 +107,8 @@ export async function saveProgramAction(formData: FormData): Promise<void> {
   if (id) {
     const { error } = await supabase.from("programs").update(payload).eq("id", id);
     if (error) {
-      console.error("programs.update_failed");
-      redirect("/admin/programs?error=save");
+      console.error("programs.update_failed", error.message);
+      redirect(`/admin/programs/${id}?error=${adminSaveErrorParam(error)}`);
     }
   } else {
     const { data, error } = await supabase
@@ -119,8 +120,8 @@ export async function saveProgramAction(formData: FormData): Promise<void> {
       .select("id")
       .single();
     if (error || !data?.id) {
-      console.error("programs.insert_failed");
-      redirect("/admin/programs?error=save");
+      console.error("programs.insert_failed", error?.message);
+      redirect(`/admin/programs/new?error=${adminSaveErrorParam(error)}`);
     }
     programId = data.id as string;
   }

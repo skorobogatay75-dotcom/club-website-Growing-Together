@@ -12,6 +12,7 @@ import {
   uploadPublicMedia,
 } from "@/lib/admin/media";
 import { localInputToIso } from "@/lib/admin/datetime";
+import { adminSaveErrorParam } from "@/lib/admin/save-error";
 import type {
   AudienceType,
   ContentStatus,
@@ -108,17 +109,21 @@ export async function saveEventAction(formData: FormData): Promise<void> {
   if (id) {
     const { error } = await supabase.from("events").update(payload).eq("id", id);
     if (error) {
-      console.error("events.update_failed");
-      redirect("/admin/events?error=save");
+      console.error("events.update_failed", error.message);
+      redirect(`/admin/events/${id}?error=${adminSaveErrorParam(error)}`);
     }
   } else {
-    const { error } = await supabase.from("events").insert({
-      ...payload,
-      created_by: session.userId,
-    });
-    if (error) {
-      console.error("events.insert_failed");
-      redirect("/admin/events?error=save");
+    const { data, error } = await supabase
+      .from("events")
+      .insert({
+        ...payload,
+        created_by: session.userId,
+      })
+      .select("id")
+      .single();
+    if (error || !data?.id) {
+      console.error("events.insert_failed", error?.message);
+      redirect(`/admin/events/new?error=${adminSaveErrorParam(error)}`);
     }
   }
 
