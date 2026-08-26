@@ -7,20 +7,28 @@ import {
 import { contentJsonToText } from "@/lib/admin/content-json";
 import { Field } from "@/components/admin/ui";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
-import type { AgeCategory, Program } from "@/types/database";
+import type { AgeCategory, Document, Program } from "@/types/database";
 import { slugify } from "@/lib/admin/slug";
 
 type Props = {
   program?: Program | null;
   categories: AgeCategory[];
+  documents?: Pick<Document, "id" | "title" | "status" | "mime_type">[];
+  selectedDocumentIds?: string[];
 };
 
-export function ProgramForm({ program, categories }: Props) {
+export function ProgramForm({
+  program,
+  categories,
+  documents = [],
+  selectedDocumentIds = [],
+}: Props) {
   const isEdit = Boolean(program);
+  const selected = new Set(selectedDocumentIds);
 
   return (
     <div className="space-y-8">
-      <form action={saveProgramAction} className="space-y-5" encType="multipart/form-data">
+      <form action={saveProgramAction} className="space-y-5">
         {program ? <input type="hidden" name="id" value={program.id} /> : null}
         <input type="hidden" name="cover_path" value={program?.cover_path ?? ""} />
 
@@ -170,6 +178,51 @@ export function ProgramForm({ program, categories }: Props) {
               Текущий файл: {program.cover_path}
             </span>
           ) : null}
+        </Field>
+
+        <Field
+          label="Документы программы"
+          hint="Отметьте файлы из раздела «Документы». На сайте покажутся только опубликованные."
+        >
+          {documents.length === 0 ? (
+            <p className="text-sm text-muted">
+              Пока нет документов.{" "}
+              <Link href="/admin/documents/new" className="text-accent hover:text-accent-hover">
+                Загрузить документ
+              </Link>
+              , затем вернитесь сюда.
+            </p>
+          ) : (
+            <ul className="max-h-64 space-y-2 overflow-y-auto rounded-[var(--radius-card)] border border-border bg-surface px-3 py-3">
+              {documents.map((doc) => {
+                const ext =
+                  doc.mime_type === "application/pdf"
+                    ? "PDF"
+                    : doc.mime_type.includes("word")
+                      ? "DOCX"
+                      : "файл";
+                return (
+                  <li key={doc.id}>
+                    <label className="flex cursor-pointer items-start gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        name="document_ids"
+                        value={doc.id}
+                        defaultChecked={selected.has(doc.id)}
+                        className="mt-0.5"
+                      />
+                      <span>
+                        <span className="font-medium text-foreground">{doc.title}</span>
+                        <span className="mt-0.5 block text-xs text-muted">
+                          {ext} · {doc.status}
+                        </span>
+                      </span>
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">

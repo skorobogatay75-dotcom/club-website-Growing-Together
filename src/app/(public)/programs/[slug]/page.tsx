@@ -3,9 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublishedProgramBySlug } from "@/features/content/queries";
 import {
+  getProgramDocuments,
   getProgramRelatedEvents,
   getRelatedPrograms,
 } from "@/features/programs/queries";
+import { formatFileSize } from "@/features/documents/queries";
 import { ContentBlocks } from "@/components/public/ContentBlocks";
 import {
   audienceLabel,
@@ -17,6 +19,7 @@ import { isPublicText, publicTextOrNull } from "@/lib/content/public-text";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { breadcrumbJsonLd } from "@/lib/seo/json-ld";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { publicStorageUrl } from "@/lib/media/public-url";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -39,9 +42,10 @@ export default async function ProgramDetailPage({ params }: Props) {
   const program = await getPublishedProgramBySlug(slug);
   if (!program) notFound();
 
-  const [relatedEvents, relatedPrograms] = await Promise.all([
+  const [relatedEvents, relatedPrograms, documents] = await Promise.all([
     getProgramRelatedEvents(program.id),
     getRelatedPrograms(program),
+    getProgramDocuments(program.id),
   ]);
 
   const excerpt = isPublicText(program.excerpt) ? program.excerpt : null;
@@ -81,6 +85,57 @@ export default async function ProgramDetailPage({ params }: Props) {
           <p className="mt-6 text-sm text-muted">Длительность: {duration}</p>
         ) : null}
         {price ? <p className="mt-2 text-sm text-muted">Стоимость: {price}</p> : null}
+
+        {documents.length > 0 ? (
+          <section className="mt-10">
+            <h2 className="text-xl font-semibold text-foreground">Документы</h2>
+            <ul className="mt-4 space-y-3">
+              {documents.map((doc) => {
+                const url = publicStorageUrl("public-documents", doc.storage_path);
+                const ext =
+                  doc.mime_type === "application/pdf" ? "PDF" : "DOCX";
+                return (
+                  <li
+                    key={doc.id}
+                    className="flex flex-col gap-3 rounded-[var(--radius-card)] border border-border bg-surface px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <p className="font-medium text-foreground">{doc.title}</p>
+                      <p className="mt-1 text-sm text-muted">
+                        {[
+                          ext,
+                          formatFileSize(doc.size_bytes),
+                          doc.version ? `версия ${doc.version}` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                    {url ? (
+                      <div className="flex flex-wrap gap-2">
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-secondary"
+                        >
+                          Открыть
+                        </a>
+                        <a
+                          href={url}
+                          download={doc.public_filename}
+                          className="btn-primary"
+                        >
+                          Скачать
+                        </a>
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ) : null}
 
         {relatedEvents.length > 0 ? (
           <section className="mt-10">

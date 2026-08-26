@@ -91,6 +91,17 @@ export async function saveProgramAction(formData: FormData): Promise<void> {
     updated_by: session.userId,
   };
 
+  const documentIds = Array.from(
+    new Set(
+      formData
+        .getAll("document_ids")
+        .map((value) => String(value).trim())
+        .filter(Boolean),
+    ),
+  );
+
+  let programId = id;
+
   if (id) {
     const { error } = await supabase.from("programs").update(payload).eq("id", id);
     if (error) {
@@ -98,13 +109,43 @@ export async function saveProgramAction(formData: FormData): Promise<void> {
       redirect("/admin/programs?error=save");
     }
   } else {
-    const { error } = await supabase.from("programs").insert({
-      ...payload,
-      created_by: session.userId,
-    });
-    if (error) {
+    const { data, error } = await supabase
+      .from("programs")
+      .insert({
+        ...payload,
+        created_by: session.userId,
+      })
+      .select("id")
+      .single();
+    if (error || !data?.id) {
       console.error("programs.insert_failed");
       redirect("/admin/programs?error=save");
+    }
+    programId = data.id as string;
+  }
+
+  if (programId) {
+    const { error: clearError } = await supabase
+      .from("program_documents")
+      .delete()
+      .eq("program_id", programId);
+    if (clearError) {
+      console.error("programs.documents_clear_failed");
+      redirect("/admin/programs?error=save");
+    }
+
+    if (documentIds.length > 0) {
+      const { error: linkError } = await supabase.from("program_documents").insert(
+        documentIds.map((documentId, index) => ({
+          program_id: programId,
+          document_id: documentId,
+          sort_order: index,
+        })),
+      );
+      if (linkError) {
+        console.error("programs.documents_link_failed");
+        redirect("/admin/programs?error=save");
+      }
     }
   }
 

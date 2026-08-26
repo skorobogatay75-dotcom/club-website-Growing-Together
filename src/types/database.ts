@@ -197,6 +197,13 @@ export type Document = {
   updated_at: string;
 };
 
+export type ProgramDocument = {
+  program_id: string;
+  document_id: string;
+  sort_order: number;
+  created_at: string;
+};
+
 export type MembershipPlan = {
   id: string;
   name: string;
@@ -272,6 +279,7 @@ export type Database = {
       photos: { Row: Photo };
       document_categories: { Row: DocumentCategory };
       documents: { Row: Document };
+      program_documents: { Row: ProgramDocument };
       membership_plans: { Row: MembershipPlan };
       applications: { Row: Application };
       team_members: { Row: TeamMember };

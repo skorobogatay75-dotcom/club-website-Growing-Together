@@ -11,6 +11,7 @@
 5. `20260808120005_storage.sql` — buckets `public-media`, `public-documents`
 6. `20260808130001_event_remaining_seats.sql` — остаток мест для событий
 7. `20260809120001_gallery_video.sql` — видеофрагменты в альбомах (MP4/WebM)
+8. `20260826120001_program_documents.sql` — привязка документов к программам
 
 ## Как применить
 

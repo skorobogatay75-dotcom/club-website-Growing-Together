@@ -1,5 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { AgeCategory, Program } from "@/types/database";
+import type { AgeCategory, Document, Program } from "@/types/database";
 
 export async function listAdminPrograms(options?: {
   q?: string;
@@ -50,4 +50,36 @@ export async function listAgeCategoriesAdmin(): Promise<AgeCategory[]> {
     .select("*")
     .order("sort_order", { ascending: true });
   return (data ?? []) as AgeCategory[];
+}
+
+export async function listProgramDocumentIds(programId: string): Promise<string[]> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("program_documents")
+    .select("document_id")
+    .eq("program_id", programId)
+    .order("sort_order", { ascending: true });
+  if (error) {
+    console.error("admin.programs.documents_list_failed");
+    return [];
+  }
+  return (data ?? []).map((row) => row.document_id as string);
+}
+
+export async function listDocumentsForProgramPicker(): Promise<
+  Pick<Document, "id" | "title" | "status" | "mime_type">[]
+> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("documents")
+    .select("id, title, status, mime_type")
+    .order("sort_order", { ascending: true })
+    .order("title", { ascending: true });
+  if (error) {
+    console.error("admin.programs.documents_picker_failed");
+    return [];
+  }
+  return (data ?? []) as Pick<Document, "id" | "title" | "status" | "mime_type">[];
 }

@@ -2,6 +2,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
   AgeCategory,
   AudienceType,
+  Document,
   EnrollmentStatus,
   Event,
   EventFormat,
@@ -117,6 +118,32 @@ export async function getProgramRelatedEvents(
   }
 
   return (data ?? []) as Event[];
+}
+
+export async function getProgramDocuments(programId: string): Promise<Document[]> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("program_documents")
+    .select(
+      "sort_order, documents ( id, category_id, title, storage_path, public_filename, mime_type, size_bytes, document_date, version, sort_order, status, created_by, updated_by, created_at, updated_at )",
+    )
+    .eq("program_id", programId)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("getProgramDocuments failed");
+    return [];
+  }
+
+  const docs: Document[] = [];
+  for (const row of data ?? []) {
+    const raw = (row as { documents?: Document | Document[] | null }).documents;
+    const doc = Array.isArray(raw) ? raw[0] : raw;
+    if (doc && doc.status === "published") docs.push(doc);
+  }
+  return docs;
 }
 
 export type { EventFormat };
