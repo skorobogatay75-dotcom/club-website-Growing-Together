@@ -34,13 +34,29 @@ export function isVideoMime(mime: string): boolean {
 }
 
 export function isImageMime(mime: string): boolean {
-  return IMAGE_MIME.has(mime);
+  return IMAGE_MIME.has(normalizeUploadMime(mime));
+}
+
+/** Приводит редкие MIME-алиасы к тем, что принимает Storage. */
+export function normalizeUploadMime(mime: string): string {
+  switch (mime.trim().toLowerCase()) {
+    case "image/x-png":
+      return "image/png";
+    case "image/jpg":
+      return "image/jpeg";
+    case "image/pjpeg":
+      return "image/jpeg";
+    default:
+      return mime.trim();
+  }
 }
 
 /** MIME из file.type или по расширению (Windows часто отдаёт пустой type). */
 export function resolveUploadMime(file: File): string {
   const fromType = file.type?.trim();
-  if (fromType && fromType !== "application/octet-stream") return fromType;
+  if (fromType && fromType !== "application/octet-stream") {
+    return normalizeUploadMime(fromType);
+  }
 
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
   switch (ext) {
