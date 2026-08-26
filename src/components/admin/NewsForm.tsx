@@ -39,7 +39,7 @@ export function NewsForm({ news }: Props) {
         </Field>
         <Field
           label="Текст"
-          hint="## / ### / - список. Ссылка: [текст](https://сайт.ru)"
+          hint="## / ### / - список. Ссылка: [текст](https://...) или просто https://..."
         >
           <textarea
             className="field-input min-h-40 font-mono text-sm"

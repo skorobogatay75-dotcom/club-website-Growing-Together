@@ -135,7 +135,7 @@ export function EventForm({ event, programs }: Props) {
         </Field>
         <Field
           label="Описание"
-          hint="## / ### / - список. Ссылка: [текст](https://сайт.ru)"
+          hint="## / ### / - список. Ссылка: [текст](https://...) или просто https://..."
         >
           <textarea
             className="field-input min-h-36 font-mono text-sm"
