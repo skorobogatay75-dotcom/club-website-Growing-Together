@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/admin";
-import { getTelegramNotifyConfig, sendTelegramMessage } from "@/lib/telegram/notify";
+import {
+  getTelegramNotifyConfig,
+  sendTelegramMessage,
+} from "@/lib/telegram/notify";
 
 async function requireStaff() {
   const supabase = await createSupabaseServerClient();
@@ -28,23 +31,95 @@ async function requireStaff() {
   return { ok: true as const };
 }
 
+function wantsHtml(request: Request) {
+  const accept = request.headers.get("accept") ?? "";
+  return accept.includes("text/html");
+}
+
+function htmlPage(body: string) {
+  return `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Проверка Telegram</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+    .ok { color: #0a7; }
+    .err { color: #b30; }
+    button { font-size: 1rem; padding: 0.6rem 1rem; cursor: pointer; }
+    pre { background: #f4f4f4; padding: 1rem; overflow: auto; white-space: pre-wrap; }
+    a { color: #06c; }
+  </style>
+</head>
+<body>
+  <h1>Проверка Telegram</h1>
+  ${body}
+</body>
+</html>`;
+}
+
 /**
  * Диагностика Telegram для сотрудников.
- * GET — только статус переменных.
+ * GET (браузер) — страница с кнопкой теста.
+ * GET (Accept: application/json) — статус переменных.
  * POST — отправить тестовое сообщение.
  */
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireStaff();
   if (!auth.ok) {
+    if (wantsHtml(request)) {
+      const loginHint =
+        auth.reason === "unauthenticated"
+          ? `<p class="err">Нужно войти в админку. <a href="/admin/login">Войти</a></p>`
+          : `<p class="err">Нет доступа (${auth.reason}).</p>`;
+      return new NextResponse(htmlPage(loginHint), {
+        status: auth.status,
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    }
     return NextResponse.json({ ok: false, reason: auth.reason }, { status: auth.status });
   }
 
   const config = getTelegramNotifyConfig();
-  return NextResponse.json({
+  const payload = {
     ok: true,
     configured: config.configured,
     hasToken: config.hasToken,
     hasChatId: config.hasChatId,
+  };
+
+  if (!wantsHtml(request)) {
+    return NextResponse.json(payload);
+  }
+
+  const statusLine = config.configured
+    ? `<p class="ok">Переменные на сервере найдены (токен и chat_id).</p>`
+    : `<p class="err">Переменные неполные: token=${config.hasToken}, chatId=${config.hasChatId}. Проверьте Timeweb и сделайте redeploy.</p>`;
+
+  const body = `
+    ${statusLine}
+    <p>Нажмите кнопку — бот должен прислать тестовое сообщение.</p>
+    <button type="button" id="send">Отправить тест в Telegram</button>
+    <pre id="out">Результат появится здесь…</pre>
+    <p><a href="/admin/applications">← К заявкам</a></p>
+    <script>
+      const out = document.getElementById('out');
+      document.getElementById('send').onclick = async () => {
+        out.textContent = 'Отправляем…';
+        try {
+          const res = await fetch('/api/admin/telegram-test', { method: 'POST' });
+          const data = await res.json();
+          out.textContent = JSON.stringify(data, null, 2);
+        } catch (e) {
+          out.textContent = String(e);
+        }
+      };
+    </script>
+  `;
+
+  return new NextResponse(htmlPage(body), {
+    headers: { "Content-Type": "text/html; charset=utf-8" },
   });
 }
 
