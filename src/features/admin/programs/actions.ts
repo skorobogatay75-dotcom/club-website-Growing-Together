@@ -63,7 +63,10 @@ export async function saveProgramAction(formData: FormData): Promise<void> {
 
   if (coverFile && coverFile.size > 0) {
     const uploaded = await uploadPublicMedia(coverFile, "programs");
-    if (!uploaded.ok) redirect(`/admin/programs?error=${encodeURIComponent(uploaded.message)}`);
+    if (!uploaded.ok) {
+      const base = id ? `/admin/programs/${id}` : "/admin/programs/new";
+      redirect(`${base}?error=${encodeURIComponent(uploaded.message)}`);
+    }
     if (coverPath && coverPath !== uploaded.path) {
       const used = await isMediaPathReferenced(coverPath);
       if (!used) await deleteStorageObject("public-media", coverPath);

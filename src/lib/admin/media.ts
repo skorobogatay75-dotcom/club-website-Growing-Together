@@ -39,21 +39,29 @@ export async function uploadPublicMedia(
     return { ok: false, message: "Storage недоступен." };
   }
 
-  const path = `${folder}/${randomUUID()}.${extensionForMime(file.type)}`;
+  const mime = validated.mime;
+  const path = `${folder}/${randomUUID()}.${extensionForMime(mime)}`;
   const buffer = Buffer.from(await file.arrayBuffer());
   const { error } = await supabase.storage
     .from("public-media")
-    .upload(path, buffer, { contentType: file.type, upsert: false });
+    .upload(path, buffer, { contentType: mime, upsert: false });
 
   if (error) {
-    console.error("media.upload_failed");
-    return { ok: false, message: "Не удалось загрузить файл." };
+    console.error("media.upload_failed", error.message);
+    const hint =
+      error.message.includes("mime") || error.message.includes("MIME")
+        ? " Проверьте формат: JPEG, PNG или WebP."
+        : "";
+    return {
+      ok: false,
+      message: `Не удалось загрузить файл.${hint} ${error.message}`.trim(),
+    };
   }
 
   return {
     ok: true,
     path,
-    mime: file.type,
+    mime,
     size: file.size,
     filename: file.name,
   };

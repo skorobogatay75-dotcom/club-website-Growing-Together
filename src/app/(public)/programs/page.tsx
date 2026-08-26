@@ -11,6 +11,8 @@ import {
   formatLabel,
 } from "@/lib/format/labels";
 import { isPublicText, publicTextOrNull } from "@/lib/content/public-text";
+import { CoverImage } from "@/components/public/CoverImage";
+import { publicStorageUrl } from "@/lib/media/public-url";
 import type { AudienceType, EnrollmentStatus } from "@/types/database";
 
 export const metadata: Metadata = {
@@ -128,12 +130,19 @@ export default async function ProgramsPage({
               const excerpt = isPublicText(program.excerpt) ? program.excerpt : null;
               const duration = publicTextOrNull(program.duration_text);
               const ageLabel = programAgeLabel(program);
+              const coverUrl = publicStorageUrl("public-media", program.cover_path);
               return (
                 <li key={program.id}>
                   <Link
                     href={`/programs/${program.slug}`}
-                    className="flex h-full flex-col rounded-[var(--radius-card)] border border-border bg-surface p-5 transition-colors hover:bg-surface-soft"
+                    className="group flex h-full flex-col overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface transition-colors hover:bg-surface-soft"
                   >
+                    <CoverImage
+                      src={coverUrl}
+                      alt={program.title}
+                      imageClassName="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                    />
+                    <div className="flex flex-1 flex-col p-5">
                     <div className="flex flex-wrap gap-2 text-xs font-medium text-muted">
                       {ageLabel ? (
                         <span className="rounded-md bg-background px-2 py-1">
@@ -160,6 +169,7 @@ export default async function ProgramsPage({
                       <span className="font-medium">
                         {enrollmentLabel(program.enrollment_status)}
                       </span>
+                    </div>
                     </div>
                   </Link>
                 </li>

@@ -37,20 +37,57 @@ export function isImageMime(mime: string): boolean {
   return IMAGE_MIME.has(mime);
 }
 
+/** MIME из file.type или по расширению (Windows часто отдаёт пустой type). */
+export function resolveUploadMime(file: File): string {
+  const fromType = file.type?.trim();
+  if (fromType && fromType !== "application/octet-stream") return fromType;
+
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  switch (ext) {
+    case "jpg":
+    case "jpeg":
+      return "image/jpeg";
+    case "png":
+      return "image/png";
+    case "webp":
+      return "image/webp";
+    case "mp4":
+      return "video/mp4";
+    case "webm":
+      return "video/webm";
+    case "pdf":
+      return "application/pdf";
+    case "docx":
+      return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    default:
+      return fromType || "";
+  }
+}
+
+function isHeicFile(file: File): boolean {
+  const mime = resolveUploadMime(file);
+  return (
+    mime === "image/heic" ||
+    mime === "image/heif" ||
+    /\.(heic|heif)$/i.test(file.name)
+  );
+}
+
 /** Проверка файла альбома (фото/видео) до загрузки. */
 export function validateAlbumMediaFile(file: File): MediaValidationResult {
   if (!file || file.size === 0) {
     return { ok: false, message: "Файл не выбран." };
   }
-  if (file.type === "image/heic" || file.type === "image/heif") {
+  if (isHeicFile(file)) {
     return {
       ok: false,
       message: "Формат HEIC не поддерживается. Сохраните JPEG, PNG или WebP.",
     };
   }
 
-  const isImage = isImageMime(file.type);
-  const isVideo = isVideoMime(file.type);
+  const mime = resolveUploadMime(file);
+  const isImage = isImageMime(mime);
+  const isVideo = isVideoMime(mime);
 
   if (!isImage && !isVideo) {
     return {
@@ -71,7 +108,7 @@ export function validateAlbumMediaFile(file: File): MediaValidationResult {
 
   return {
     ok: true,
-    mime: file.type,
+    mime,
     size: file.size,
     filename: file.name,
   };

@@ -20,6 +20,7 @@ import { isPublicText, publicTextOrNull } from "@/lib/content/public-text";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { breadcrumbJsonLd } from "@/lib/seo/json-ld";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { CoverImage } from "@/components/public/CoverImage";
 import { publicStorageUrl } from "@/lib/media/public-url";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { AgeCategory } from "@/types/database";
@@ -57,6 +58,7 @@ export default async function ProgramDetailPage({ params }: Props) {
   const ageName =
     programAgeLabel(program) ??
     (await getAgeCategoryName(program.age_category_id));
+  const coverUrl = publicStorageUrl("public-media", program.cover_path);
 
   return (
     <article className="section-space">
@@ -76,6 +78,16 @@ export default async function ProgramDetailPage({ params }: Props) {
         <h1 className="mt-6 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           {program.title}
         </h1>
+        {coverUrl ? (
+          <div className="mt-6 overflow-hidden rounded-[var(--radius-card)] border border-border">
+            <CoverImage
+              src={coverUrl}
+              alt={program.title}
+              aspectClass="aspect-[16/9]"
+              sizes="(max-width: 768px) 100vw, 768px"
+            />
+          </div>
+        ) : null}
         <div className="mt-4 flex flex-wrap gap-2 text-sm text-muted">
           {ageName ? (
             <>

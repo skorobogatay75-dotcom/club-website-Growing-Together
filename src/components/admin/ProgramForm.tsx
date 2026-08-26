@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   saveProgramAction,
   deleteProgramAction,
@@ -7,6 +8,7 @@ import {
 import { contentJsonToText } from "@/lib/admin/content-json";
 import { Field } from "@/components/admin/ui";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
+import { publicStorageUrl } from "@/lib/media/public-url";
 import type { Document, Program } from "@/types/database";
 import { slugify } from "@/lib/admin/slug";
 
@@ -23,6 +25,7 @@ export function ProgramForm({
 }: Props) {
   const isEdit = Boolean(program);
   const selected = new Set(selectedDocumentIds);
+  const coverUrl = publicStorageUrl("public-media", program?.cover_path);
 
   return (
     <div className="space-y-8">
@@ -161,18 +164,29 @@ export function ProgramForm({
           Показывать как избранную
         </label>
 
-        <Field label="Обложка (JPEG/PNG/WebP)">
+        <Field label="Обложка (JPEG/PNG/WebP, до 10 МБ)">
           <input
             className="field-input"
             type="file"
             name="cover"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
           />
-          {program?.cover_path ? (
-            <span className="mt-1 block text-xs text-muted">
-              Текущий файл: {program.cover_path}
-            </span>
-          ) : null}
+          {coverUrl ? (
+            <div className="mt-3 overflow-hidden rounded-[var(--radius-card)] border border-border">
+              <div className="relative aspect-[16/9] max-w-md bg-surface-soft">
+                <Image
+                  src={coverUrl}
+                  alt={`Обложка: ${program?.title ?? "программа"}`}
+                  fill
+                  sizes="400px"
+                  className="object-cover"
+                />
+              </div>
+              <p className="px-3 py-2 text-xs text-muted">{program?.cover_path}</p>
+            </div>
+          ) : (
+            <p className="mt-1 text-xs text-muted">Обложка ещё не загружена.</p>
+          )}
         </Field>
 
         <Field
