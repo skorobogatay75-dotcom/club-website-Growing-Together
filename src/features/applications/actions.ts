@@ -36,6 +36,21 @@ export async function submitApplication(
   _prev: SubmitApplicationState | null,
   formData: FormData,
 ): Promise<SubmitApplicationState> {
+  try {
+    return await submitApplicationInner(formData);
+  } catch {
+    console.error("application.submit_unexpected_error");
+    return {
+      ok: false,
+      message:
+        "Не удалось отправить заявку. Обновите страницу и попробуйте ещё раз.",
+    };
+  }
+}
+
+async function submitApplicationInner(
+  formData: FormData,
+): Promise<SubmitApplicationState> {
   const honeypot = readString(formData.get("website"))?.trim();
   if (honeypot) {
     // Тихий успех для ботов
@@ -162,7 +177,13 @@ export async function submitApplication(
     };
   }
 
-  const titles = await loadRelatedTitles(data);
+  let titles: Awaited<ReturnType<typeof loadRelatedTitles>> = {};
+  try {
+    titles = await loadRelatedTitles(data);
+  } catch {
+    // Заявка уже сохранена — уведомление уйдёт без названий.
+  }
+
   const notifyInput = {
     applicationId: inserted.id as string,
     type: data.type,

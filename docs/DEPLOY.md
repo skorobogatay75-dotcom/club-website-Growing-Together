@@ -76,6 +76,7 @@ values (
 | `APPLICATION_NOTIFY_EMAIL` | нет | куда слать заявки |
 | `TELEGRAM_BOT_TOKEN` | нет | опционально |
 | `TELEGRAM_CHAT_ID` | нет | опционально |
+| `TELEGRAM_API_BASE` | нет | если Timeweb не достучится до `api.telegram.org` — URL прокси без `/` в конце |
 
 5. Deploy. После первого деплоя привяжите свой домен в **Project → Settings → Domains**.
 6. Убедитесь, что `NEXT_PUBLIC_SITE_URL` совпадает с финальным доменом, и обновите Redirect URLs в Supabase.

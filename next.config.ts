@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: "52mb",
+      // Свой домен за прокси Timeweb — иначе Server Actions могут падать в браузере
+      allowedOrigins: ["clubrv.ru", "www.clubrv.ru"],
     },
   },
   images: {

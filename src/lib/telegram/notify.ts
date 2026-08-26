@@ -1,14 +1,86 @@
 import type { StaffNotificationInput } from "@/lib/email/notify";
 
+function cleanEnv(value: string | undefined): string | null {
+  const cleaned = value?.trim().replace(/^["']|["']$/g, "") ?? "";
+  return cleaned.length > 0 ? cleaned : null;
+}
+
+export function getTelegramNotifyConfig() {
+  const token = cleanEnv(process.env.TELEGRAM_BOT_TOKEN);
+  const chatIdRaw = cleanEnv(process.env.TELEGRAM_CHAT_ID);
+  return {
+    token,
+    chatIdRaw,
+    hasToken: Boolean(token),
+    hasChatId: Boolean(chatIdRaw),
+    configured: Boolean(token && chatIdRaw),
+  };
+}
+
+function telegramApiBase(): string {
+  const custom = cleanEnv(process.env.TELEGRAM_API_BASE);
+  return (custom ?? "https://api.telegram.org").replace(/\/+$/, "");
+}
+
+export async function sendTelegramMessage(
+  text: string,
+): Promise<{ ok: true } | { ok: false; description: string }> {
+  const { token, chatIdRaw } = getTelegramNotifyConfig();
+  if (!token || !chatIdRaw) {
+    return { ok: false, description: "not_configured" };
+  }
+
+  // Telegram принимает и строку, и число; число надёжнее для личного chat_id
+  const chatId = /^-?\d+$/.test(chatIdRaw) ? Number(chatIdRaw) : chatIdRaw;
+
+  try {
+    const response = await fetch(
+      `${telegramApiBase()}/bot${token}/sendMessage`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          disable_web_page_preview: true,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      let description = `http_${response.status}`;
+      try {
+        const payload = (await response.json()) as {
+          description?: string;
+        };
+        if (payload.description) description = payload.description;
+      } catch {
+        // ignore parse errors
+      }
+      return { ok: false, description };
+    }
+
+    return { ok: true };
+  } catch {
+    return { ok: false, description: "network_error" };
+  }
+}
+
 /**
  * Опциональный Telegram-адаптер. Не падает, если токены не заданы.
  */
 export async function notifyTelegramAboutApplication(
   input: StaffNotificationInput,
 ): Promise<boolean> {
-  const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
-  const chatId = process.env.TELEGRAM_CHAT_ID?.trim();
-  if (!token || !chatId) return false;
+  const config = getTelegramNotifyConfig();
+  if (!config.configured) {
+    console.error("application.notify.telegram_skipped", {
+      applicationId: input.applicationId,
+      hasToken: config.hasToken,
+      hasChatId: config.hasChatId,
+    });
+    return false;
+  }
 
   const text = [
     "Новая заявка «Вместе растём»",
@@ -23,24 +95,14 @@ export async function notifyTelegramAboutApplication(
     .filter(Boolean)
     .join("\n");
 
-  try {
-    const response = await fetch(
-      `https://api.telegram.org/bot${token}/sendMessage`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text,
-          disable_web_page_preview: true,
-        }),
-      },
-    );
-    return response.ok;
-  } catch {
+  const result = await sendTelegramMessage(text);
+  if (!result.ok) {
     console.error("application.notify.telegram_failed", {
       applicationId: input.applicationId,
+      description: result.description,
     });
     return false;
   }
+
+  return true;
 }
