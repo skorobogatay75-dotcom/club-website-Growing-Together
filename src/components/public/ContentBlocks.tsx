@@ -1,4 +1,5 @@
 import { isPublicText } from "@/lib/content/public-text";
+import { InlineText } from "@/components/public/InlineText";
 
 type ContentBlock = {
   type?: string;
@@ -26,7 +27,7 @@ export function ContentBlocks({ value }: { value: unknown }) {
               key={index}
               className="text-xl font-semibold tracking-tight text-foreground"
             >
-              {block.text}
+              <InlineText text={block.text} />
             </Tag>
           );
         }
@@ -37,7 +38,9 @@ export function ContentBlocks({ value }: { value: unknown }) {
           return (
             <ul key={index} className="list-disc space-y-1 pl-5 text-muted">
               {items.map((item) => (
-                <li key={item}>{item}</li>
+                <li key={item}>
+                  <InlineText text={item} />
+                </li>
               ))}
             </ul>
           );
@@ -46,7 +49,7 @@ export function ContentBlocks({ value }: { value: unknown }) {
         if (isPublicText(block.text)) {
           return (
             <p key={index} className="text-muted">
-              {block.text}
+              <InlineText text={block.text} />
             </p>
           );
         }

@@ -37,7 +37,10 @@ export function NewsForm({ news }: Props) {
         <Field label="Анонс">
           <textarea className="field-input min-h-20" name="excerpt" defaultValue={news?.excerpt ?? ""} />
         </Field>
-        <Field label="Текст" hint="## / ### / - список">
+        <Field
+          label="Текст"
+          hint="## / ### / - список. Ссылка: [текст](https://сайт.ru)"
+        >
           <textarea
             className="field-input min-h-40 font-mono text-sm"
             name="content"

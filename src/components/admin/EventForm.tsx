@@ -135,7 +135,10 @@ export function EventForm({ event, categories, programs }: Props) {
         <Field label="Анонс">
           <textarea className="field-input min-h-20" name="excerpt" defaultValue={event?.excerpt ?? ""} />
         </Field>
-        <Field label="Описание" hint="## / ### / - список">
+        <Field
+          label="Описание"
+          hint="## / ### / - список. Ссылка: [текст](https://сайт.ru)"
+        >
           <textarea
             className="field-input min-h-36 font-mono text-sm"
             name="content"

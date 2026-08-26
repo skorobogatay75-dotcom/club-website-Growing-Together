@@ -61,7 +61,7 @@ export function ProgramForm({
 
         <Field
           label="Содержание"
-          hint="## заголовок, ### подзаголовок, - список. Без HTML."
+          hint="## заголовок, ### подзаголовок, - список. Ссылка: [текст](https://сайт.ru). Без HTML."
         >
           <textarea
             className="field-input min-h-40 font-mono text-sm"
