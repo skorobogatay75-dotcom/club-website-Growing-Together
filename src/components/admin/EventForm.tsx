@@ -16,9 +16,11 @@ type Props = {
 };
 
 export function EventForm({ event, programs }: Props) {
+  const zone = event?.timezone || "Europe/Moscow";
+
   return (
     <div className="space-y-8">
-      <form action={saveEventAction} className="space-y-5" encType="multipart/form-data">
+      <form action={saveEventAction} className="space-y-5">
         {event ? <input type="hidden" name="id" value={event.id} /> : null}
         <input type="hidden" name="cover_path" value={event?.cover_path ?? ""} />
 
@@ -29,13 +31,13 @@ export function EventForm({ event, programs }: Props) {
           <Field label="Slug">
             <input className="field-input" name="slug" defaultValue={event?.slug ?? ""} />
           </Field>
-          <Field label="Начало">
+          <Field label="Начало" hint="Время по часовому поясу ниже (обычно Москва)">
             <input
               className="field-input"
               type="datetime-local"
               name="starts_at"
               required
-              defaultValue={isoToLocalInput(event?.starts_at)}
+              defaultValue={isoToLocalInput(event?.starts_at, zone)}
             />
           </Field>
           <Field label="Окончание">
@@ -44,14 +46,14 @@ export function EventForm({ event, programs }: Props) {
               type="datetime-local"
               name="ends_at"
               required
-              defaultValue={isoToLocalInput(event?.ends_at)}
+              defaultValue={isoToLocalInput(event?.ends_at, zone)}
             />
           </Field>
           <Field label="Часовой пояс">
             <input
               className="field-input"
               name="timezone"
-              defaultValue={event?.timezone ?? "Europe/Moscow"}
+              defaultValue={zone}
             />
           </Field>
           <Field label="Место">

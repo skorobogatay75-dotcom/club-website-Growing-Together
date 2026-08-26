@@ -51,8 +51,9 @@ export async function saveEventAction(formData: FormData): Promise<void> {
   const title = str(formData, "title");
   if (!title) redirect("/admin/events?error=title");
 
-  const startsAt = localInputToIso(str(formData, "starts_at"));
-  const endsAt = localInputToIso(str(formData, "ends_at"));
+  const timezone = str(formData, "timezone") || "Europe/Moscow";
+  const startsAt = localInputToIso(str(formData, "starts_at"), timezone);
+  const endsAt = localInputToIso(str(formData, "ends_at"), timezone);
   if (!startsAt || !endsAt || endsAt < startsAt) {
     redirect("/admin/events?error=time");
   }
@@ -91,7 +92,7 @@ export async function saveEventAction(formData: FormData): Promise<void> {
     format: (str(formData, "format") || "workshop") as EventFormat,
     starts_at: startsAt,
     ends_at: endsAt,
-    timezone: str(formData, "timezone") || "Europe/Moscow",
+    timezone: timezone,
     venue: str(formData, "venue") || null,
     price_text: str(formData, "price_text") || null,
     capacity: capacityRaw ? Number(capacityRaw) : null,
