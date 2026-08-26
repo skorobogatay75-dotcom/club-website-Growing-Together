@@ -61,8 +61,10 @@ export async function sendTelegramMessage(
     }
 
     return { ok: true };
-  } catch {
-    return { ok: false, description: "network_error" };
+  } catch (error) {
+    const detail =
+      error instanceof Error ? error.message.slice(0, 120) : "unknown";
+    return { ok: false, description: `network_error:${detail}` };
   }
 }
 

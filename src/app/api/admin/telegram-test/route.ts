@@ -149,10 +149,9 @@ export async function POST() {
       ok: false,
       reason: "telegram_api",
       description: result.description,
-      hint:
-        result.description === "network_error"
-          ? "Сервер Timeweb не смог достучаться до api.telegram.org."
-          : "Токен или chat_id не приняты Telegram. Проверьте /start у бота и chat_id.",
+      hint: result.description.startsWith("network_error")
+        ? "Сервер Timeweb не достучится до api.telegram.org. Нужен TELEGRAM_API_BASE (Cloudflare Worker) — см. docs/DEPLOY.md."
+        : "Токен или chat_id не приняты Telegram. Проверьте /start у бота и chat_id.",
     });
   }
 

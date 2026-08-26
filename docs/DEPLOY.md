@@ -76,7 +76,21 @@ values (
 | `APPLICATION_NOTIFY_EMAIL` | нет | куда слать заявки |
 | `TELEGRAM_BOT_TOKEN` | нет | опционально |
 | `TELEGRAM_CHAT_ID` | нет | опционально |
-| `TELEGRAM_API_BASE` | нет | если Timeweb не достучится до `api.telegram.org` — URL прокси без `/` в конце |
+| `TELEGRAM_API_BASE` | нет | если Timeweb не достучится до `api.telegram.org` — URL своего Cloudflare Worker без `/` в конце (см. ниже) |
+
+### Telegram с Timeweb (если `network_error`)
+
+Диагностика: `/api/admin/telegram-test` → «Отправить тест».  
+Если `description: network_error` — сервер Timeweb не достучится до Telegram. Решение: свой бесплатный прокси на Cloudflare Workers.
+
+1. Зарегистрируйтесь на [dash.cloudflare.com](https://dash.cloudflare.com) (бесплатно).
+2. **Workers & Pages** → **Create** → **Create Worker**.
+3. Вставьте код из [`scripts/telegram-cloudflare-worker.js`](../scripts/telegram-cloudflare-worker.js) → **Deploy**.
+4. Скопируйте URL вида `https://имя.аккаунт.workers.dev` (без `/` в конце).
+5. В Timeweb добавьте переменную `TELEGRAM_API_BASE` = этот URL → **Redeploy**.
+6. Снова нажмите «Отправить тест» на `/api/admin/telegram-test`.
+
+Не используйте чужие публичные прокси — через них проходит токен бота.
 
 5. Deploy. После первого деплоя привяжите свой домен в **Project → Settings → Domains**.
 6. Убедитесь, что `NEXT_PUBLIC_SITE_URL` совпадает с финальным доменом, и обновите Redirect URLs в Supabase.
