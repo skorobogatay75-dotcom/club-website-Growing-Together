@@ -20,6 +20,8 @@ import { buildPageMetadata } from "@/lib/seo/metadata";
 import { breadcrumbJsonLd } from "@/lib/seo/json-ld";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { publicStorageUrl } from "@/lib/media/public-url";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { AgeCategory } from "@/types/database";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -42,10 +44,11 @@ export default async function ProgramDetailPage({ params }: Props) {
   const program = await getPublishedProgramBySlug(slug);
   if (!program) notFound();
 
-  const [relatedEvents, relatedPrograms, documents] = await Promise.all([
+  const [relatedEvents, relatedPrograms, documents, ageName] = await Promise.all([
     getProgramRelatedEvents(program.id),
     getRelatedPrograms(program),
     getProgramDocuments(program.id),
+    getAgeCategoryName(program.age_category_id),
   ]);
 
   const excerpt = isPublicText(program.excerpt) ? program.excerpt : null;
@@ -71,6 +74,12 @@ export default async function ProgramDetailPage({ params }: Props) {
           {program.title}
         </h1>
         <div className="mt-4 flex flex-wrap gap-2 text-sm text-muted">
+          {ageName ? (
+            <>
+              <span>{ageName}</span>
+              <span aria-hidden="true">·</span>
+            </>
+          ) : null}
           <span>{formatLabel(program.format)}</span>
           <span aria-hidden="true">·</span>
           <span>{audienceLabel(program.audience_type)}</span>
@@ -189,4 +198,16 @@ export default async function ProgramDetailPage({ params }: Props) {
       </div>
     </article>
   );
+}
+
+async function getAgeCategoryName(id: string | null): Promise<string | null> {
+  if (!id) return null;
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return null;
+  const { data } = await supabase
+    .from("age_categories")
+    .select("name")
+    .eq("id", id)
+    .maybeSingle();
+  return (data as Pick<AgeCategory, "name"> | null)?.name ?? null;
 }

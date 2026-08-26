@@ -71,16 +71,31 @@ export function ProgramForm({
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Возрастная категория">
+          <Field
+            label="Возраст"
+            hint={
+              categories.length === 0
+                ? "Список пуст: в базе нет возрастных категорий. Выполните supabase/seed-age-categories.sql в Supabase."
+                : "Категория для фильтра на сайте и карточки программы"
+            }
+          >
             <select
               className="field-input"
               name="age_category_id"
               defaultValue={program?.age_category_id ?? ""}
+              disabled={categories.length === 0}
             >
-              <option value="">Не выбрано</option>
+              <option value="">
+                {categories.length === 0 ? "Нет категорий в базе" : "Не выбрано"}
+              </option>
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
+                  {category.age_from != null || category.age_to != null
+                    ? ` (${[category.age_from, category.age_to]
+                        .filter((v) => v != null)
+                        .join("–")} лет)`
+                    : ""}
                 </option>
               ))}
             </select>
