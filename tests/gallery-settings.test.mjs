@@ -8,7 +8,9 @@ import {
   contactsStatusNote,
   parseClubSettings,
   parseContactsSettings,
+  DEFAULT_GROUP_LINKS,
 } from "../src/features/admin/settings/parse.ts";
+import { messengerHref } from "../src/lib/content/messenger-link.ts";
 
 describe("gallery year helpers", () => {
   const albums = [
@@ -48,7 +50,11 @@ describe("settings parsers", () => {
           phone: null,
           email: "a@b.c",
           hours: "",
-          messengers: { telegram: "@club", whatsapp: null },
+          messengers: {
+            telegram: "@club",
+            max: "https://max.ru/join/abc",
+            vk: "https://vk.com/club",
+          },
         },
       ],
     ]);
@@ -61,6 +67,8 @@ describe("settings parsers", () => {
     assert.equal(contacts.address, "ул. Пример");
     assert.equal(contacts.email, "a@b.c");
     assert.equal(contacts.telegram, "@club");
+    assert.equal(contacts.max, "https://max.ru/join/abc");
+    assert.equal(contacts.vk, "https://vk.com/club");
     assert.equal(contactsStatusNote(contacts), "ready");
   });
 
@@ -72,9 +80,42 @@ describe("settings parsers", () => {
         email: "",
         hours: "",
         telegram: "",
-        whatsapp: "",
+        max: "",
+        vk: "",
       }),
       "needs_fill",
     );
+  });
+
+  it("fills default MAX and VK group links when messengers are empty", () => {
+    const contacts = parseContactsSettings(
+      new Map([["contacts.public", { messengers: {} }]]),
+    );
+    assert.equal(contacts.max, DEFAULT_GROUP_LINKS.max);
+    assert.equal(contacts.vk, DEFAULT_GROUP_LINKS.vk);
+    assert.equal(contacts.telegram, "");
+  });
+});
+
+describe("messenger group links", () => {
+  it("builds https links for telegram, max and vk", () => {
+    assert.equal(messengerHref("telegram", "@club"), "https://t.me/club");
+    assert.equal(
+      messengerHref("max", "max.ru/join/abc"),
+      "https://max.ru/join/abc",
+    );
+    assert.equal(messengerHref("vk", "vk.com/club"), "https://vk.com/club");
+    assert.equal(
+      messengerHref("max", "https://max.ru/c/-75505485803737/AaA_RwgOJhY"),
+      "https://max.ru/c/-75505485803737/AaA_RwgOJhY",
+    );
+    assert.equal(
+      messengerHref("vk", "https://vk.ru/club241019566"),
+      "https://vk.ru/club241019566",
+    );
+  });
+
+  it("rejects non-http schemes", () => {
+    assert.equal(messengerHref("telegram", "javascript:alert(1)"), null);
   });
 });

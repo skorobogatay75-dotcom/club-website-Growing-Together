@@ -12,13 +12,20 @@ export type ClubSettings = {
   timezone: string;
 };
 
+export const DEFAULT_GROUP_LINKS = {
+  telegram: "",
+  max: "https://max.ru/c/-75505485803737/AaA_RwgOJhY",
+  vk: "https://vk.ru/club241019566",
+};
+
 export type ContactsSettings = {
   address: string;
   phone: string;
   email: string;
   hours: string;
   telegram: string;
-  whatsapp: string;
+  max: string;
+  vk: string;
 };
 
 function asRecord(value: Json | null | undefined): Record<string, unknown> {
@@ -56,8 +63,12 @@ export function parseContactsSettings(map: Map<string, Json>): ContactsSettings 
     phone: textField(contacts.phone),
     email: textField(contacts.email),
     hours: textField(contacts.hours),
-    telegram: textField(messengers.telegram),
-    whatsapp: textField(messengers.whatsapp),
+    telegram: textField(messengers.telegram) || DEFAULT_GROUP_LINKS.telegram,
+    max: textField(messengers.max) || DEFAULT_GROUP_LINKS.max,
+    vk:
+      textField(messengers.vk) ||
+      textField(messengers.vkontakte) ||
+      DEFAULT_GROUP_LINKS.vk,
   };
 }
 
@@ -68,7 +79,8 @@ export function contactsStatusNote(contacts: ContactsSettings): string {
     contacts.email,
     contacts.hours,
     contacts.telegram,
-    contacts.whatsapp,
+    contacts.max,
+    contacts.vk,
   ].some((value) => hasPublicValue(value));
   return filled ? "ready" : "needs_fill";
 }

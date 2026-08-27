@@ -90,21 +90,36 @@ export default async function AdminSettingsPage({
           <Field label="Часы работы">
             <input className="field-input" name="hours" defaultValue={contacts.hours} />
           </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <p className="text-sm font-medium text-foreground">
+            Группы для общения
+          </p>
+          <p className="text-sm text-muted">
+            Вставьте ссылки на группы — на сайте появятся кнопки «Перейти в
+            группу».
+          </p>
+          <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Telegram">
               <input
                 className="field-input"
                 name="telegram"
                 defaultValue={contacts.telegram}
-                placeholder="@username или ссылка"
+                placeholder="https://t.me/… или @username"
               />
             </Field>
-            <Field label="WhatsApp">
+            <Field label="MAX">
               <input
                 className="field-input"
-                name="whatsapp"
-                defaultValue={contacts.whatsapp}
-                placeholder="+7…"
+                name="max"
+                defaultValue={contacts.max}
+                placeholder="https://max.ru/join/…"
+              />
+            </Field>
+            <Field label="ВКонтакте">
+              <input
+                className="field-input"
+                name="vk"
+                defaultValue={contacts.vk}
+                placeholder="https://vk.ru/… или https://vk.com/…"
               />
             </Field>
           </div>

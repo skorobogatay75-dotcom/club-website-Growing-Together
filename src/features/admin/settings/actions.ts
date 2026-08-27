@@ -70,7 +70,8 @@ export async function saveContactsSettingsAction(formData: FormData): Promise<vo
     email: str(formData, "email"),
     hours: str(formData, "hours"),
     telegram: str(formData, "telegram"),
-    whatsapp: str(formData, "whatsapp"),
+    max: str(formData, "max"),
+    vk: str(formData, "vk"),
   };
 
   const payload = {
@@ -80,7 +81,8 @@ export async function saveContactsSettingsAction(formData: FormData): Promise<vo
     hours: contacts.hours || null,
     messengers: {
       telegram: contacts.telegram || null,
-      whatsapp: contacts.whatsapp || null,
+      max: contacts.max || null,
+      vk: contacts.vk || null,
     },
   };
 

@@ -374,7 +374,7 @@ insert into public.site_settings (key, value_json) values
   ),
   (
     'contacts.public',
-    '{"address":null,"phone":null,"email":null,"hours":null,"messengers":{}}'::jsonb
+    '{"address":null,"phone":null,"email":null,"hours":null,"messengers":{"telegram":null,"max":"https://max.ru/c/-75505485803737/AaA_RwgOJhY","vk":"https://vk.ru/club241019566"}}'::jsonb
   ),
   (
     'features.calendar',
