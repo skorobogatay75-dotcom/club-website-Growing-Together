@@ -20,7 +20,7 @@ describe("stage 5 application validation", async () => {
       childAgeText: "9 лет",
       preferredContact: "phone",
       consentPersonalData: true,
-      consentMarketing: false,
+      consentPrivacy: true,
     });
     assert.equal(parsed.success, true);
     if (parsed.success) {
@@ -36,7 +36,7 @@ describe("stage 5 application validation", async () => {
       phone: "+79991234567",
       preferredContact: "any",
       consentPersonalData: true,
-      consentMarketing: false,
+      consentPrivacy: true,
     });
     assert.equal(parsed.success, false);
   });
@@ -48,7 +48,19 @@ describe("stage 5 application validation", async () => {
       phone: "+79991234567",
       preferredContact: "any",
       consentPersonalData: false,
-      consentMarketing: false,
+      consentPrivacy: true,
+    });
+    assert.equal(parsed.success, false);
+  });
+
+  it("rejects missing privacy consent", () => {
+    const parsed = mod.applicationFormSchema.safeParse({
+      type: "general",
+      parentName: "Анна",
+      phone: "+79991234567",
+      preferredContact: "any",
+      consentPersonalData: true,
+      consentPrivacy: false,
     });
     assert.equal(parsed.success, false);
   });

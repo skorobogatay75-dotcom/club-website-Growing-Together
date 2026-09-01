@@ -80,6 +80,14 @@ export function SiteFooter({ contacts }: Props) {
                 Согласие на обработку данных
               </Link>
             </li>
+            <li>
+              <Link
+                href="/offer"
+                className="text-sm text-muted transition-colors hover:text-foreground"
+              >
+                Оферта
+              </Link>
+            </li>
           </ul>
 
           {showContacts ? (

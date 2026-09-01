@@ -1,5 +1,9 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Document, DocumentCategory } from "@/types/database";
+import {
+  pickLegalDocument,
+  type LegalDocumentKind,
+} from "@/features/documents/legal";
 
 export type DocumentWithCategory = Document & {
   document_categories: Pick<DocumentCategory, "name" | "slug"> | null;
@@ -47,6 +51,27 @@ export async function listPublishedDocuments(): Promise<{
     categories: (categoriesResult.data ?? []) as DocumentCategory[],
     documents,
   };
+}
+
+export async function findPublishedLegalDocument(
+  kind: LegalDocumentKind,
+): Promise<Document | null> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from("documents")
+    .select(
+      "id, category_id, title, storage_path, public_filename, mime_type, size_bytes, document_date, version, sort_order, status, created_by, updated_by, created_at, updated_at",
+    )
+    .eq("status", "published");
+
+  if (error) {
+    console.error("find legal document failed");
+    return null;
+  }
+
+  return pickLegalDocument((data ?? []) as Document[], kind);
 }
 
 export function formatFileSize(bytes: number): string {

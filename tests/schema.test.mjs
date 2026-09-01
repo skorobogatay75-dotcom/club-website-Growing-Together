@@ -20,6 +20,11 @@ describe("stage 2 sql migrations", () => {
       "20260808120004_rls.sql",
       "20260808120005_storage.sql",
       "20260808130001_event_remaining_seats.sql",
+      "20260809120001_gallery_video.sql",
+      "20260826120001_program_documents.sql",
+      "20260826130001_program_age_text.sql",
+      "20260826140001_event_age_text.sql",
+      "20260901120001_document_category_programs.sql",
     ]);
   });
 

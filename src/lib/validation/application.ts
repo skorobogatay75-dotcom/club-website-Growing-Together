@@ -60,7 +60,9 @@ export const applicationFormSchema = z
     consentPersonalData: z.boolean().refine((value) => value === true, {
       message: "Нужно согласие на обработку данных",
     }),
-    consentMarketing: z.boolean(),
+    consentPrivacy: z.boolean().refine((value) => value === true, {
+      message: "Нужно согласие с политикой конфиденциальности",
+    }),
     source: optionalText,
     referrer: optionalText,
     utmSource: optionalText,

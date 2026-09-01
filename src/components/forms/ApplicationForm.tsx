@@ -93,7 +93,7 @@ export function ApplicationForm({
       preferredContact: "any",
       comment: "",
       consentPersonalData: false,
-      consentMarketing: false,
+      consentPrivacy: false,
       source,
       referrer: "",
       utmSource: "",
@@ -331,12 +331,13 @@ export function ApplicationForm({
           />
           <span>
             Согласен(на) на{" "}
-            <Link href="/consent" className="text-accent underline-offset-2 hover:underline">
+            <Link
+              href="/consent"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent underline-offset-2 hover:underline"
+            >
               обработку персональных данных
-            </Link>{" "}
-            и ознакомился(ась) с{" "}
-            <Link href="/privacy" className="text-accent underline-offset-2 hover:underline">
-              политикой конфиденциальности
             </Link>
             .
           </span>
@@ -349,16 +350,31 @@ export function ApplicationForm({
           </p>
         )}
 
-        <label className="flex items-start gap-3 text-sm text-muted">
+        <label className="flex items-start gap-3 text-sm text-foreground">
           <input
             type="checkbox"
             className="mt-1 h-4 w-4"
-            {...register("consentMarketing")}
+            {...register("consentPrivacy")}
           />
           <span>
-            Хочу получать информационные сообщения о встречах клуба (необязательно)
+            Согласен(на) с{" "}
+            <Link
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent underline-offset-2 hover:underline"
+            >
+              Политикой конфиденциальности
+            </Link>
+            .
           </span>
         </label>
+        {(errors.consentPrivacy || state?.fieldErrors?.consentPrivacy) && (
+          <p className="text-sm text-accent" role="alert">
+            {errors.consentPrivacy?.message ||
+              state?.fieldErrors?.consentPrivacy?.[0]}
+          </p>
+        )}
       </div>
 
       <p className="text-sm text-muted">

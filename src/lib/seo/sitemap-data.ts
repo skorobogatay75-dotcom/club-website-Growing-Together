@@ -18,6 +18,7 @@ const STATIC_PATHS = [
   "/contacts",
   "/privacy",
   "/consent",
+  "/offer",
 ] as const;
 
 export async function collectSitemapEntries(): Promise<SitemapEntry[]> {
