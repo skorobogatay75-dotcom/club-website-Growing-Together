@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { getSupabaseBackendUrl, getSupabasePublicEnv } from "./env";
+import { getSupabasePublicEnv, supabaseInternalFetch } from "./env";
 
 /**
  * Серверный клиент с anon key + cookies (уважает RLS).
@@ -8,14 +8,14 @@ import { getSupabaseBackendUrl, getSupabasePublicEnv } from "./env";
  */
 export async function createSupabaseServerClient() {
   const env = getSupabasePublicEnv();
-  const backendUrl = getSupabaseBackendUrl();
-  if (!env || !backendUrl) {
+  if (!env) {
     return null;
   }
 
   const cookieStore = await cookies();
 
-  return createServerClient(backendUrl, env.anonKey, {
+  return createServerClient(env.url, env.anonKey, {
+    global: { fetch: supabaseInternalFetch },
     cookies: {
       getAll() {
         return cookieStore.getAll();

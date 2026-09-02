@@ -14,6 +14,7 @@ export function LoginForm({ nextPath = "/admin", errorCode }: Props) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const bootstrapError =
     errorCode === "forbidden"
@@ -142,11 +143,18 @@ export function LoginForm({ nextPath = "/admin", errorCode }: Props) {
         <span className="mb-1 block font-medium">Пароль</span>
         <input
           className="field-input"
-          type="password"
+          type={showPassword ? "text" : "password"}
           name="password"
           autoComplete="current-password"
           required
         />
+        <button
+          type="button"
+          className="mt-1 text-sm text-accent hover:text-accent-hover"
+          onClick={() => setShowPassword((value) => !value)}
+        >
+          {showPassword ? "Скрыть пароль" : "Показать пароль"}
+        </button>
       </label>
 
       <button type="submit" className="btn-primary w-full" disabled={pending}>

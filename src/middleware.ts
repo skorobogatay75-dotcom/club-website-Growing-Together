@@ -1,7 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
-import { getSupabaseBackendUrl } from "@/lib/supabase/env";
+import {
+  getSupabaseBackendUrl,
+  getSupabasePublicEnv,
+  supabaseInternalFetch,
+} from "@/lib/supabase/env";
 
 const PUBLIC_ADMIN_PREFIXES = [
   "/admin/login",
@@ -37,15 +41,14 @@ export async function middleware(request: NextRequest) {
     request: { headers: request.headers },
   });
 
-  const url = getSupabaseBackendUrl();
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  const publicEnv = getSupabasePublicEnv();
   const { pathname } = request.nextUrl;
 
   if (!pathname.startsWith("/admin")) {
     return response;
   }
 
-  if (!url || !anonKey) {
+  if (!publicEnv) {
     if (!isPublicAdminPath(pathname)) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/admin/login";
@@ -55,7 +58,8 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  const supabase = createServerClient(url, anonKey, {
+  const supabase = createServerClient(publicEnv.url, publicEnv.anonKey, {
+    global: { fetch: supabaseInternalFetch },
     cookies: {
       getAll() {
         return request.cookies.getAll();
