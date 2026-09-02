@@ -1,3 +1,7 @@
+function stripSlash(url: string): string {
+  return url.replace(/\/$/, "");
+}
+
 /**
  * Проверка публичных env Supabase.
  * Без них сайт собирается и отдаёт пустые списки контента.
@@ -13,7 +17,20 @@ export function getSupabasePublicEnv(): {
     return null;
   }
 
-  return { url, anonKey };
+  return { url: stripSlash(url), anonKey };
+}
+
+/**
+ * URL, на который ходит сервер Timeweb Apps.
+ * Если задан SUPABASE_INTERNAL_URL (IP сервера в РФ), браузер идёт на clubrv.ru,
+ * а Node — напрямую на базу, минуя ТСПУ.
+ */
+export function getSupabaseBackendUrl(): string | null {
+  const internal = process.env.SUPABASE_INTERNAL_URL?.trim();
+  if (internal) {
+    return stripSlash(internal);
+  }
+  return getSupabasePublicEnv()?.url ?? null;
 }
 
 export function hasSupabasePublicEnv(): boolean {

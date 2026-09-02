@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { getSupabasePublicEnv } from "./env";
+import { getSupabaseBackendUrl, getSupabasePublicEnv } from "./env";
 
 /**
  * Service role — ТОЛЬКО сервер (API routes / server actions).
@@ -7,9 +7,10 @@ import { getSupabasePublicEnv } from "./env";
  */
 export function createSupabaseServiceClient() {
   const env = getSupabasePublicEnv();
+  const backendUrl = getSupabaseBackendUrl();
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
-  if (!env || !serviceRoleKey) {
+  if (!env || !backendUrl || !serviceRoleKey) {
     throw new Error(
       "Supabase service role env is missing. Set URL, anon key, and SUPABASE_SERVICE_ROLE_KEY on the server.",
     );
@@ -19,7 +20,7 @@ export function createSupabaseServiceClient() {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY looks invalid.");
   }
 
-  return createClient(env.url, serviceRoleKey, {
+  return createClient(backendUrl, serviceRoleKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,

@@ -17,7 +17,31 @@ const nextConfig: NextConfig = {
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      {
+        protocol: "https",
+        hostname: "clubrv.ru",
+        pathname: "/storage/v1/object/public/**",
+      },
+      {
+        protocol: "https",
+        hostname: "www.clubrv.ru",
+        pathname: "/storage/v1/object/public/**",
+      },
     ],
+  },
+  async rewrites() {
+    const prefixes = [
+      "rest/v1",
+      "auth/v1",
+      "storage/v1",
+      "realtime/v1",
+      "functions/v1",
+      "graphql/v1",
+    ];
+    return prefixes.map((prefix) => ({
+      source: `/${prefix}/:path*`,
+      destination: `/api/sb/${prefix}/:path*`,
+    }));
   },
   async headers() {
     return [

@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { getSupabaseBackendUrl } from "@/lib/supabase/env";
 
 const PUBLIC_ADMIN_PREFIXES = [
   "/admin/login",
@@ -16,7 +17,7 @@ function isPublicAdminPath(pathname: string): boolean {
 }
 
 async function getStaffProfile(userId: string) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const url = getSupabaseBackendUrl();
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!url || !serviceKey) return null;
 
@@ -36,7 +37,7 @@ export async function middleware(request: NextRequest) {
     request: { headers: request.headers },
   });
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const url = getSupabaseBackendUrl();
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
   const { pathname } = request.nextUrl;
 
