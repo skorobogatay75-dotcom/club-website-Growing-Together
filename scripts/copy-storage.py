@@ -3,11 +3,9 @@
 
 from __future__ import annotations
 
-import http.client
 import json
 import os
 import subprocess
-import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -18,7 +16,6 @@ SOURCE = os.environ.get("SOURCE_URL", "https://hwxdwfqrvvhojzucxriz.supabase.co"
 SOURCE_KEY = os.environ.get("SOURCE_KEY", "").strip().strip('"').strip("'")
 TARGET = os.environ.get("TARGET_URL", "http://127.0.0.1").rstrip("/")
 TARGET_REST = os.environ.get("TARGET_REST", TARGET).rstrip("/")
-TARGET_STORAGE = os.environ.get("TARGET_STORAGE", TARGET).rstrip("/")
 TARGET_KEY = os.environ.get("TARGET_KEY", "").strip().strip('"').strip("'")
 
 PATH_QUERIES = [
@@ -30,31 +27,6 @@ PATH_QUERIES = [
     ("public-media", "team_members", "photo_path"),
 ]
 
-UPLOAD_SNIPPET = r"""
-import http.client, os, sys
-data = open("/file", "rb").read()
-path = os.environ["UPLOAD_PATH"]
-mime = os.environ["UPLOAD_MIME"]
-key = os.environ["TARGET_KEY"]
-conn = http.client.HTTPConnection("storage", 5000, timeout=180)
-conn._http_vsn = 10
-conn._http_vsn_str = "HTTP/1.0"
-headers = {
-    "Authorization": "Bearer " + key,
-    "apikey": key,
-    "Content-Type": mime,
-    "Content-Length": str(len(data)),
-    "x-upsert": "true",
-    "Connection": "close",
-}
-conn.request("POST", path, body=data, headers=headers)
-resp = conn.getresponse()
-body = resp.read()
-if resp.status not in (200, 201, 409):
-    sys.stderr.write(body[:400].decode("utf-8", "replace"))
-    sys.exit(resp.status)
-"""
-
 
 def rest_headers(key: str) -> dict[str, str]:
     return {
@@ -65,7 +37,7 @@ def rest_headers(key: str) -> dict[str, str]:
     }
 
 
-def rest_table_url(table: str, column: str) -> str:
+def rest_table_url(table: str, column: str, schema: str = "public") -> str:
     parsed = urllib.parse.urlparse(TARGET_REST)
     host = (parsed.hostname or "").lower()
     direct = host in {"rest", "supabase-rest"} or parsed.port == 3000
@@ -123,119 +95,129 @@ def mime_for(path: str) -> str:
     return "application/octet-stream"
 
 
-def in_docker() -> bool:
-    return Path("/.dockerenv").exists()
+def docker_output(args: list[str]) -> str:
+    return subprocess.check_output(args, text=True).strip()
 
 
-def docker_network() -> str:
-    return subprocess.check_output(
+def storage_host_root() -> Path:
+    mounts = docker_output(
         [
             "docker",
             "inspect",
             "supabase-storage",
-            "-f",
-            "{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}",
-        ],
-        text=True,
-    ).strip()
-
-
-def storage_post_path(bucket: str, path: str) -> str:
-    encoded = urllib.parse.quote(path, safe="/")
-    parsed = urllib.parse.urlparse(TARGET_STORAGE)
-    host = (parsed.hostname or "").lower()
-    direct = host in {"storage", "supabase-storage"} or parsed.port == 5000
-    if direct:
-        return f"/object/{bucket}/{encoded}"
-    return f"/storage/v1/object/{bucket}/{encoded}"
-
-
-def upload_http(bucket: str, path: str, data: bytes) -> None:
-    parsed = urllib.parse.urlparse(TARGET_STORAGE)
-    object_path = storage_post_path(bucket, path)
-    last_error: Exception | None = None
-    for attempt in range(1, 6):
-        conn = http.client.HTTPConnection(parsed.hostname or "127.0.0.1", parsed.port or 80, timeout=180)
-        conn._http_vsn = 10
-        conn._http_vsn_str = "HTTP/1.0"
-        try:
-            headers = {
-                "Host": parsed.netloc,
-                "Authorization": f"Bearer {TARGET_KEY}",
-                "apikey": TARGET_KEY,
-                "Content-Type": mime_for(path),
-                "Content-Length": str(len(data)),
-                "x-upsert": "true",
-                "Connection": "close",
-            }
-            conn.request("POST", object_path, body=data, headers=headers)
-            resp = conn.getresponse()
-            body = resp.read()
-            if resp.status in (200, 201, 409):
-                return
-            raise SystemExit(f"{bucket}/{path}: HTTP {resp.status} {body[:200]!r}")
-        except SystemExit:
-            raise
-        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, TimeoutError, OSError) as exc:
-            last_error = exc
-            print(f"retry upload {attempt}/5 {bucket}/{path}: {exc}")
-            time.sleep(attempt * 2)
-        finally:
-            conn.close()
-    raise SystemExit(f"{bucket}/{path}: upload failed {last_error}")
-
-
-def upload_via_docker(bucket: str, path: str, data: bytes) -> None:
-    net = docker_network()
-    with tempfile.NamedTemporaryFile(delete=False) as handle:
-        handle.write(data)
-        host_file = handle.name
+            "--format",
+            '{{range .Mounts}}{{.Source}}|{{.Destination}}\n{{end}}',
+        ]
+    )
+    host = ""
+    for line in mounts.splitlines():
+        if "|" not in line:
+            continue
+        source, dest = line.split("|", 1)
+        if dest.rstrip("/") in {"/var/lib/storage", "/var/lib/storage/data"}:
+            host = source
+            break
+        if dest.rstrip("/").endswith("storage") and not host:
+            host = source
+    if not host:
+        raise SystemExit(f"storage volume not found:\n{mounts}")
+    inner = ""
     try:
-        result = subprocess.run(
-            [
-                "docker",
-                "run",
-                "--rm",
-                "--network",
-                net,
-                "-v",
-                f"{host_file}:/file:ro",
-                "-e",
-                f"TARGET_KEY={TARGET_KEY}",
-                "-e",
-                f"UPLOAD_PATH=/object/{bucket}/{urllib.parse.quote(path, safe='/')}",
-                "-e",
-                f"UPLOAD_MIME={mime_for(path)}",
-                "python:3.12-slim",
-                "python",
-                "-c",
-                UPLOAD_SNIPPET,
-            ],
-            capture_output=True,
-        )
-        if result.returncode != 0:
-            err = (result.stderr or result.stdout).decode("utf-8", "replace")[:300]
-            raise SystemExit(f"{bucket}/{path}: upload HTTP {result.returncode} {err}")
-    finally:
-        os.unlink(host_file)
+        inner = docker_output(["docker", "exec", "supabase-storage", "ls", "-1", "/var/lib/storage"])
+    except subprocess.CalledProcessError:
+        inner = ""
+    names = set(inner.split())
+    if "data" in names:
+        candidate = Path(host) / "data"
+        if candidate.is_dir() or not names - {"data"}:
+            return candidate
+    return Path(host)
 
 
-def upload(bucket: str, path: str, data: bytes) -> None:
-    if in_docker():
-        upload_http(bucket, path, data)
-        return
-    parsed = urllib.parse.urlparse(TARGET_STORAGE)
+def write_file(root: Path, bucket: str, path: str, data: bytes, mime: str) -> Path:
+    dest = root / bucket / path
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(data)
+    try:
+        os.setxattr(dest, "user.supabase.content-type", mime.encode())
+        os.setxattr(dest, "user.supabase.cache-control", b"3600")
+    except OSError:
+        pass
+    return dest
+
+
+def objects_url() -> str:
+    parsed = urllib.parse.urlparse(TARGET_REST)
     host = (parsed.hostname or "").lower()
-    if host in {"storage", "supabase-storage"} or parsed.port == 5000:
-        upload_http(bucket, path, data)
+    direct = host in {"rest", "supabase-rest"} or parsed.port == 3000
+    prefix = "" if direct else "/rest/v1"
+    return (
+        f"{TARGET_REST}{prefix}/objects?on_conflict=bucket_id,name"
+    )
+
+
+def register_object(bucket: str, path: str, size: int, mime: str) -> None:
+    payload = json.dumps(
+        {
+            "bucket_id": bucket,
+            "name": path,
+            "metadata": {
+                "mimetype": mime,
+                "size": size,
+                "cacheControl": "3600",
+            },
+        }
+    ).encode()
+    headers = {
+        **rest_headers(TARGET_KEY),
+        "Content-Type": "application/json",
+        "Content-Profile": "storage",
+        "Prefer": "return=minimal,resolution=merge-duplicates",
+    }
+    req = urllib.request.Request(objects_url(), data=payload, method="POST", headers=headers)
+    try:
+        urllib.request.urlopen(req, timeout=60).read()
         return
-    # Host → Caddy/Envoy breaks on files around 1 MB. Talk to storage from its Docker network.
-    upload_via_docker(bucket, path, data)
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", "replace")[:300]
+        if exc.code in (200, 201, 409):
+            return
+        print(f"rest objects {exc.code}, trying sql: {body}")
+    insert_via_sql(bucket, path, size, mime)
+
+
+def sql_literal(value: str) -> str:
+    return "$$" + value.replace("$", "") + "$$"
+
+
+def insert_via_sql(bucket: str, path: str, size: int, mime: str) -> None:
+    sql = f"""
+INSERT INTO storage.objects (bucket_id, name, metadata)
+VALUES (
+  {sql_literal(bucket)},
+  {sql_literal(path)},
+  jsonb_build_object('mimetype', {sql_literal(mime)}, 'size', {size}, 'cacheControl', '3600')
+)
+ON CONFLICT (bucket_id, name) DO UPDATE SET
+  metadata = EXCLUDED.metadata,
+  updated_at = now();
+"""
+    result = subprocess.run(
+        ["docker", "exec", "-i", "supabase-db", "psql", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1"],
+        input=sql,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        err = (result.stderr or result.stdout)[:400]
+        raise SystemExit(f"sql {bucket}/{path}: {err}")
 
 
 def main() -> None:
     if not SOURCE_KEY or not TARGET_KEY:
         raise SystemExit("Set SOURCE_KEY and TARGET_KEY")
+    root = storage_host_root()
+    print(f"storage dir {root}")
     seen: set[tuple[str, str]] = set()
     copied = 0
     for bucket, table, column in PATH_QUERIES:
@@ -252,8 +234,10 @@ def main() -> None:
             except urllib.error.HTTPError as exc:
                 print(f"skip {bucket}/{path}: HTTP {exc.code}")
                 continue
-            print(f"upload {bucket}/{path} ({len(data)} bytes)")
-            upload(bucket, path, data)
+            mime = mime_for(path)
+            dest = write_file(root, bucket, path, data, mime)
+            print(f"write {dest} ({len(data)} bytes)")
+            register_object(bucket, path, len(data), mime)
             copied += 1
             print(f"ok {bucket}/{path}")
     print(f"done files={copied}")
