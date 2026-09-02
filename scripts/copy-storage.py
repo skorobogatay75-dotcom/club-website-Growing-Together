@@ -47,15 +47,30 @@ def fetch_paths(table: str, column: str) -> list[str]:
 
 
 def download(bucket: str, path: str) -> bytes:
-    encoded = urllib.parse.quote(path)
+    encoded = urllib.parse.quote(path, safe="/")
     url = f"{SOURCE}/storage/v1/object/public/{bucket}/{encoded}"
     req = urllib.request.Request(url, headers={"User-Agent": "club-copy/1.0"})
     with urllib.request.urlopen(req, timeout=120) as resp:
         return resp.read()
 
 
+def mime_for(path: str) -> str:
+    lower = path.lower()
+    if lower.endswith(".jpg") or lower.endswith(".jpeg"):
+        return "image/jpeg"
+    if lower.endswith(".png"):
+        return "image/png"
+    if lower.endswith(".webp"):
+        return "image/webp"
+    if lower.endswith(".pdf"):
+        return "application/pdf"
+    if lower.endswith(".docx"):
+        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    return "application/octet-stream"
+
+
 def upload(bucket: str, path: str, data: bytes) -> None:
-    encoded = urllib.parse.quote(path)
+    encoded = urllib.parse.quote(path, safe="/")
     url = f"{TARGET}/storage/v1/object/{bucket}/{encoded}"
     req = urllib.request.Request(
         url,
@@ -63,7 +78,7 @@ def upload(bucket: str, path: str, data: bytes) -> None:
         method="POST",
         headers={
             **rest_headers(TARGET_KEY),
-            "Content-Type": "application/octet-stream",
+            "Content-Type": mime_for(path),
             "x-upsert": "true",
         },
     )
