@@ -37,10 +37,19 @@ def headers(key: str, extra: dict[str, str] | None = None) -> dict[str, str]:
         "apikey": key,
         "Authorization": f"Bearer {key}",
         "Accept": "application/json",
+        "User-Agent": "club-copy/1.0",
     }
     if extra:
         h.update(extra)
     return h
+
+
+def order_col(table: str) -> str:
+    if table == "site_settings":
+        return "key"
+    if table == "program_documents":
+        return "program_id"
+    return "id"
 
 
 def request(url: str, key: str, method: str = "GET", body: bytes | None = None, extra: dict[str, str] | None = None) -> object:
@@ -56,11 +65,17 @@ def fetch_all(base: str, key: str, table: str) -> list[dict]:
     rows: list[dict] = []
     start = 0
     while True:
-        url = f"{base}/rest/v1/{table}?select=*&order=id"
-        extra = {"Range": f"{start}-{start + 999}"}
-        req = urllib.request.Request(url, method="GET", headers=headers(key, extra))
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            chunk = json.loads(resp.read().decode("utf-8") or "[]")
+        q = urllib.parse.urlencode(
+            {"select": "*", "order": order_col(table), "limit": 1000, "offset": start}
+        )
+        url = f"{base}/rest/v1/{table}?{q}"
+        req = urllib.request.Request(url, method="GET", headers=headers(key))
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                chunk = json.loads(resp.read().decode("utf-8") or "[]")
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", "replace")[:400]
+            raise SystemExit(f"{table}: HTTP {exc.code} {detail}") from exc
         if not chunk:
             break
         rows.extend(chunk)
@@ -88,7 +103,11 @@ def upsert(table: str, rows: list[dict], on_conflict: str) -> None:
         "Prefer": "resolution=merge-duplicates,return=minimal",
     }
     url = f"{TARGET}/rest/v1/{table}?on_conflict={urllib.parse.quote(on_conflict)}"
-    request(url, TARGET_KEY, method="POST", body=payload, extra=extra)
+    try:
+        request(url, TARGET_KEY, method="POST", body=payload, extra=extra)
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", "replace")[:400]
+        raise SystemExit(f"write {table}: HTTP {exc.code} {detail}") from exc
     print(f"{table}: {len(rows)}")
 
 
