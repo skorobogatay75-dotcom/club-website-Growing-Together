@@ -12,6 +12,8 @@ import urllib.request
 SOURCE = os.environ.get("SOURCE_URL", "https://hwxdwfqrvvhojzucxriz.supabase.co").rstrip("/")
 SOURCE_KEY = os.environ.get("SOURCE_KEY", "").strip()
 TARGET = os.environ.get("TARGET_URL", "http://127.0.0.1").rstrip("/")
+TARGET_REST = os.environ.get("TARGET_REST", TARGET).rstrip("/")
+TARGET_STORAGE = os.environ.get("TARGET_STORAGE", TARGET).rstrip("/")
 TARGET_KEY = os.environ.get("TARGET_KEY", "").strip()
 
 PATH_QUERIES = [
@@ -34,10 +36,13 @@ def rest_headers(key: str) -> dict[str, str]:
 
 
 def fetch_paths(table: str, column: str) -> list[str]:
-    url = f"{TARGET}/rest/v1/{table}?select={column}"
+    url = f"{TARGET_REST}/rest/v1/{table}?select={column}"
     req = urllib.request.Request(url, headers=rest_headers(TARGET_KEY))
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        rows = json.loads(resp.read().decode("utf-8") or "[]")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            rows = json.loads(resp.read().decode("utf-8") or "[]")
+    except urllib.error.HTTPError as exc:
+        raise SystemExit(f"list {table}: HTTP {exc.code} {url}") from exc
     paths = []
     for row in rows:
         value = row.get(column)
@@ -71,7 +76,7 @@ def mime_for(path: str) -> str:
 
 def upload(bucket: str, path: str, data: bytes) -> None:
     encoded = urllib.parse.quote(path, safe="/")
-    url = f"{TARGET}/storage/v1/object/{bucket}/{encoded}"
+    url = f"{TARGET_STORAGE}/object/{bucket}/{encoded}"
     req = urllib.request.Request(
         url,
         data=data,
