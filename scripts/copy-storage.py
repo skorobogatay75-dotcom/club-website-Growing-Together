@@ -35,14 +35,24 @@ def rest_headers(key: str) -> dict[str, str]:
     }
 
 
+def rest_table_url(table: str, column: str) -> str:
+    # Kong/Caddy expose /rest/v1; PostgREST itself serves tables at /
+    parsed = urllib.parse.urlparse(TARGET_REST)
+    host = (parsed.hostname or "").lower()
+    direct = host in {"rest", "supabase-rest"} or parsed.port == 3000
+    prefix = "" if direct else "/rest/v1"
+    return f"{TARGET_REST}{prefix}/{table}?select={column}"
+
+
 def fetch_paths(table: str, column: str) -> list[str]:
-    url = f"{TARGET_REST}/rest/v1/{table}?select={column}"
+    url = rest_table_url(table, column)
     req = urllib.request.Request(url, headers=rest_headers(TARGET_KEY))
     try:
         with urllib.request.urlopen(req, timeout=60) as resp:
             rows = json.loads(resp.read().decode("utf-8") or "[]")
     except urllib.error.HTTPError as exc:
-        raise SystemExit(f"list {table}: HTTP {exc.code} {url}") from exc
+        body = exc.read()[:200]
+        raise SystemExit(f"list {table}: HTTP {exc.code} {url} {body!r}") from exc
     paths = []
     for row in rows:
         value = row.get(column)
